@@ -1,38 +1,104 @@
 .App {
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;  /* Center vertically */
+}
+
+.App-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;  /* Space between logo and registration form */
 }
 
 .App-logo {
-  height: 40vmin;
+  width: auto;  /* Allow the width to adjust automatically */
+  height: 100%;  /* Make logo height match form height */
   pointer-events: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Registration page style */
+.register-container {
+  height: 100vh;
+  background-color: #f8f9fa;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.register-box {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+}
+
+h2 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+p {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+#info {
+  font-size: 30px;  /* Larger font size for 'ENTER YOUR INFORMATION' */
+  font-weight: bold;
+  color: #000;  /* Dark black color */
+  margin-bottom: 20px;  /* Space between the title and the form */
+}
+
+.register-box h2 {
+  font-size: 18px; /* Smaller size for the "Register as {role}" text */
+}
+
+
+.form-control {
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.btn-dark {
+  background-color: black;
   color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  padding: 10px;
 }
 
-.App-link {
-  color: #61dafb;
+.btn-outline-dark {
+  border: 2px solid black;
+  color: black;
+  font-weight: bold;
+  border-radius: 5px;
+  padding: 10px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+a {
+  text-decoration: none;
+  color: black;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Flexbox adjustments to center everything horizontally */
+@media (max-width: 768px) {
+  .App-container {
+    flex-direction: column;
+    align-items: center;
   }
-  to {
-    transform: rotate(360deg);
+
+  .App-logo {
+    width: 100%;  
+    margin-bottom: 20px;
   }
 }
