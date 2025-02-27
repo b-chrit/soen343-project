@@ -1,70 +1,80 @@
-.App {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;  /* Center vertically */
-}
-
-.App-container {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 20px;  /* Space between logo and registration form */
-}
-
-.App-logo {
-  width: auto;  /* Allow the width to adjust automatically */
-  height: 100%;  /* Make logo height match form height */
-  pointer-events: none;
-}
-
-/* Registration page style */
+/* Full-screen layout */
 .register-container {
+  display: flex;
   height: 100vh;
-  background-color: #f8f9fa;
+  width: 100vw;
+  overflow: hidden;
 }
 
-.register-box {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-width: 400px;
+/* Left Half - Background Image */
+.register-image {
+  flex: 1;
+  background: url('./logo.jpg') center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative; /* Needed for absolute positioning of text */
+}
+
+/* Add SEES in the top-left corner */
+.register-title {
+  position: absolute;
+  top: 20px;
+  left: 30px;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* Ensure the image inside the left panel scales properly */
+.register-image img {
   width: 100%;
-  padding: 20px;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Right Half - Registration Box */
+.register-box {
+  flex: 1;
+  background: white;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
+  padding: 50px;
+  text-align: center;
 }
 
-h2 {
-  font-family: 'Poppins', sans-serif;
-  font-size: 24px;
-  font-weight: 700;
+/* Form container */
+.register-box form {
+  width: 100%;
+  max-width: 300px;
 }
 
-p {
-  font-family: 'Poppins', sans-serif;
+/* Heading */
+.register-box h2 {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* Paragraph */
+.register-box p {
   font-size: 14px;
   color: #6c757d;
 }
 
-#info {
-  font-size: 30px;  /* Larger font size for 'ENTER YOUR INFORMATION' */
-  font-weight: bold;
-  color: #000;  /* Dark black color */
-  margin-bottom: 20px;  /* Space between the title and the form */
-}
-
-.register-box h2 {
-  font-size: 18px; /* Smaller size for the "Register as {role}" text */
-}
-
-
-.form-control {
-  border-radius: 5px;
+/* Select dropdown */
+.register-box select {
+  width: 100%;
   padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
 }
 
+/* Buttons */
 .btn-dark {
   background-color: black;
   color: white;
@@ -81,6 +91,7 @@ p {
   padding: 10px;
 }
 
+/* Links */
 a {
   text-decoration: none;
   color: black;
@@ -90,15 +101,18 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Flexbox adjustments to center everything horizontally */
+/* Responsive: Stack on small screens */
 @media (max-width: 768px) {
-  .App-container {
+  .register-container {
     flex-direction: column;
-    align-items: center;
   }
 
-  .App-logo {
-    width: 100%;  
-    margin-bottom: 20px;
+  .register-image {
+    display: none;  /* Hide image on smaller screens */
+  }
+
+  .register-box {
+    width: 100%;
+    padding: 20px;
   }
 }
