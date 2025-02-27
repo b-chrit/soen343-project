@@ -1,38 +1,118 @@
-.App {
+/* Full-screen layout */
+.register-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* Left Half - Background Image */
+.register-image {
+  flex: 1;
+  background: url('./logo.jpg') center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative; /* Needed for absolute positioning of text */
+}
+
+/* Add SEES in the top-left corner */
+.register-title {
+  position: absolute;
+  top: 20px;
+  left: 30px;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* Ensure the image inside the left panel scales properly */
+.register-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Right Half - Registration Box */
+.register-box {
+  flex: 1;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 50px;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* Form container */
+.register-box form {
+  width: 100%;
+  max-width: 300px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Heading */
+.register-box h2 {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 10px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+/* Paragraph */
+.register-box p {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+/* Select dropdown */
+.register-box select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+/* Buttons */
+.btn-dark {
+  background-color: black;
   color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  padding: 10px;
 }
 
-.App-link {
-  color: #61dafb;
+.btn-outline-dark {
+  border: 2px solid black;
+  color: black;
+  font-weight: bold;
+  border-radius: 5px;
+  padding: 10px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+/* Links */
+a {
+  text-decoration: none;
+  color: black;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive: Stack on small screens */
+@media (max-width: 768px) {
+  .register-container {
+    flex-direction: column;
   }
-  to {
-    transform: rotate(360deg);
+
+  .register-image {
+    display: none;  /* Hide image on smaller screens */
+  }
+
+  .register-box {
+    width: 100%;
+    padding: 20px;
   }
 }
