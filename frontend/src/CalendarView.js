@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import EventModal from "./EventModal"; 
-
+import HeaderBar from "./HeaderBar";
 const calendarEvents = {
   "2025-03-02": [{ title: "MARKETING & MEDIA", color: "text-pink-500" }],
   "2025-03-06": [
@@ -57,7 +57,7 @@ const generateCalendar = (year, month) => {
   return calendar;
 };
 
-export default function CalendarView({ onBack }) {
+export default function CalendarView({ onBack, onNavigateEvents, onNavigateProfile }) {
   const [month, setMonth] = useState(2); // March (0-based index)
   const [year, setYear] = useState(2025);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -75,6 +75,13 @@ export default function CalendarView({ onBack }) {
 
   return (
     <div className="h-screen flex flex-col">
+      <HeaderBar
+        menuOptions={[
+          { label: "EVENTS", onClick: onNavigateEvents },
+          { label: "PROFILE", onClick: onNavigateProfile  },
+          { label: "LOGOUT", onClick: () => console.log("Logging Out") },
+        ]}
+      />
 
       {/* MONTH NAVIGATION */}
       <div className="flex justify-between items-center px-6 py-4">

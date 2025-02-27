@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
+import HeaderBar from "./HeaderBar";
 const eventsData = {
   yesterday: [
     {
@@ -74,6 +74,14 @@ export default function EventDashboard({ onViewCalendar, onNavigateEvents, onNav
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      {/* REUSABLE HEADER WITH MENU OPTIONS */}
+      <HeaderBar
+        menuOptions={[
+          { label: "EVENTS", onClick: onNavigateEvents },
+          { label: "PROFILE", onClick: onNavigateProfile  },
+          { label: "LOGOUT", onClick: () => console.log("Logging Out") },
+        ]}
+      />
 
       {/* MAIN CONTENT */}
       <div className="flex flex-grow items-center justify-center px-20 py-12">

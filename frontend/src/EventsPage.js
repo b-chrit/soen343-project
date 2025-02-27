@@ -1,11 +1,11 @@
 import { useState, useRef } from "react";
 import { ChevronLeft, Eye, Search } from "lucide-react";
 import EventModal from "./EventModal";
-  
+import HeaderBar from "./HeaderBar";
 
   const eventsPerPage = 5; // Show 6 events per page
 
-  export default function EventsPage({ onBack, eventsData }) {
+  export default function EventsPage({ onBack, eventsData, onNavigateEvents, onNavigateProfile }) {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [isSearchActive, setIsSearchActive] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -32,7 +32,13 @@ import EventModal from "./EventModal";
   
     return (
       <div className="min-h-screen bg-white flex flex-col relative" onClick={handleClickOutside}>
-  
+          <HeaderBar
+            menuOptions={[
+              { label: "EVENTS", onClick: onNavigateEvents },
+              { label: "PROFILE", onClick: onNavigateProfile  },
+              { label: "LOGOUT", onClick: () => console.log("Logging Out") },
+            ]}
+          />
         {/* MAIN CONTENT */}
         <div className="px-10 py-6">
           {/* BACK BUTTON & TITLE */}
