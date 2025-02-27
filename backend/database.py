@@ -75,7 +75,7 @@ class Attendee(Base):
         self.ticket_status = ticket_status
 
 
-class Learners(Base):
+class Learner(Base):
     __tablename__ = 'learners'
 
     id              = Column(Integer, ForeignKey('attendees.id'), primary_key=True)
