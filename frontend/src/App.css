@@ -13,10 +13,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative; /* Needed for absolute positioning of text */
+  position: relative;
 }
 
-/* Add SEES in the top-left corner */
 .register-title {
   position: absolute;
   top: 20px;
@@ -28,14 +27,7 @@
   letter-spacing: 2px;
 }
 
-/* Ensure the image inside the left panel scales properly */
-.register-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Right Half - Registration Box */
+/* Right Half - Login Box */
 .register-box {
   flex: 1;
   background: white;
@@ -47,48 +39,69 @@
   text-align: center;
 }
 
+.register-box h2 {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 20px; /* Add more space between heading and form */
+}
+
 /* Form container */
 .register-box form {
   width: 100%;
   max-width: 300px;
+  margin-bottom: 20px; /* Add space between form and buttons */
 }
 
-/* Heading */
-.register-box h2 {
-  font-size: 26px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-/* Paragraph */
 .register-box p {
   font-size: 14px;
   color: #6c757d;
 }
 
-/* Select dropdown */
-.register-box select {
+/* Input fields */
+.form-control {
   width: 100%;
   padding: 10px;
+  margin-bottom: 15px; /* Adjust spacing between inputs */
   border-radius: 5px;
   border: 1px solid #ccc;
 }
 
 /* Buttons */
-.btn-dark {
-  background-color: black;
+.btn-dark,
+.btn-outline-dark {
+  background-color: black; 
   color: white;
   font-weight: bold;
   border-radius: 5px;
-  padding: 10px;
+  padding: 12px 20px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: 100%; /* Make the buttons full-width */
+  margin-bottom: 20px;
 }
 
+.btn-dark:hover,
+.btn-outline-dark:hover {
+  background-color: #333; /* Darken the button on hover */
+}
+
+/* Continue as Guest Button (btn-outline-dark) */
 .btn-outline-dark {
-  border: 2px solid black;
+  background-color: transparent;
+  border: 2px solid black; 
   color: black;
   font-weight: bold;
-  border-radius: 5px;
-  padding: 10px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.btn-outline-dark:hover {
+  background-color: black;
+  color: white;
+}
+
+.button-container {
+  margin-bottom: 20px;
 }
 
 /* Links */
@@ -99,6 +112,13 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+/* Guest message styling */
+.guest-message {
+  color: green;
+  font-weight: bold;
+  margin-top: 20px;
 }
 
 /* Responsive: Stack on small screens */

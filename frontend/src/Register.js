@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import logo from "./logo.jpg";  // Import your image
+import { useNavigate } from "react-router-dom";  // Import useNavigate hook
+import logo from "./logo.jpg";  
 
 const Register = () => {
   const [roleSelected, setRoleSelected] = useState(false);
   const [role, setRole] = useState('');
+  const navigate = useNavigate();  // Initialize navigate
 
   const handleRoleSelect = (event) => {
     setRole(event.target.value);
@@ -15,11 +17,19 @@ const Register = () => {
     alert('You are continuing as a guest!');
   };
 
+  const handleRegister = (e) => {
+    e.preventDefault();
+    //we can save the user data to database here
+
+    // After successful registration, navigate to the login page
+    navigate('/login');  // Redirect to login page after successful registration
+  };
+
   return (
     <div className="register-container">
       {/* Left Side - Image */}
       <div className="register-image">
-        <div className="register-title">SEES</div>  {/* Added title */}
+        <div className="register-title"></div>  {/* Added title */}
         <img src={logo} alt="Background" />
       </div>
 
@@ -54,11 +64,11 @@ const Register = () => {
           <>
             <p id="info">ENTER YOUR INFORMATION</p>
             <h2 className="fw-bold">Register as {role}</h2>
-            <form>
+            <form onSubmit={handleRegister}>  {/* On form submission, call handleRegister */}
               <input type="text" placeholder="Name" className="form-control my-2" />
               <input type="email" placeholder="Email" className="form-control my-2" />
               <input type="password" placeholder="Password" className="form-control my-2" />
-              <button className="btn btn-dark w-100 mt-2">CONTINUE</button>
+              <button type="submit" className="btn btn-dark w-100 mt-2">CONTINUE</button>  {/* Submit the form */}
             </form>
             <p className="mt-3">
               Already have an account? <a href="/login" className="fw-bold">LOG IN</a>
