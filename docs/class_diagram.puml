@@ -1,0 +1,253 @@
+@startuml domain_model
+
+enum LearnerType{
+    Student
+    Professional
+    Researcher
+}
+
+enum UserType{
+    Admin
+    Organizer
+    Attendee
+    Stakeholder
+}
+
+enum PaymentStatus{
+    Created
+    Complete
+    Cancelled
+}
+
+enum SessionType{
+    Online
+    InPerson
+}
+
+enum AttendeeType{
+    Learner
+    Speaker
+}
+
+class User{
+    - id : int
+    - name : str
+    - email : str
+    - password : str
+    - type : UserType
+
+    + get_id() : int
+    + get_type() : UserType
+    + get_name() : str
+    + get_email() : str
+    
+    + set_password(plain_text_password : str) : None
+    - check_password(plain_text_password : str) : bool
+
+    + {static} auth( email : str, password : str ) : User
+
+}
+
+class Admin{
+    - phone_number : str
+
+    + get_events() : List[Event]
+    + get_users() : List[User]
+    + delete_user( user_id ) : None
+    + delete_event( event_id ) : None
+}
+class StakeHolder{
+    - type : str
+    - contact_info : str
+
+    + get_type() : str
+    + set_type( type : str ) : None
+    + get_contact_info() : str
+    + set_contact_info( contact_info : str ) : None
+
+    + get_event() : Event
+
+}
+
+class Organizer{
+    - organization_name : str
+    - phone_number : str
+
+    + set_organization_name( organization_name : str )
+    + set_phone_number( phone_number : str )
+
+    + get_organization_name() : str
+    + get_phone_number() : str
+
+    + create_event(title : str, event_start : datetime, event_end : datetime, category : str, location : str) : None
+    + delete_event() : None
+    + get_event() : Event
+}
+
+
+class Event{
+    - id : int
+    - title : str
+    - event_start : datetime
+    - event_end : datetime
+    - category : str
+    - description : str
+    - location : str
+
+    + set_title( title : str ) : None
+    + set_start_time( time : datetime ) : None
+    + set_end_time( time : datetime ) : None
+    + set_category( category : str ) : None
+    + set_description( description : str ) : None
+    + set_location( location : str ) : None
+
+    + get_id() : int
+    + get_title() : str
+    + get_start_time() : datetime
+    + get_end_time() : datetime
+    + get_category() : str
+    + get_description() : str
+    + get_location() : str
+
+    + create_online_session(start_time : datetime, end_time : datetime, link : str, meeting_platform : str) : None
+    + create_in_person_session(start_time : datetime, end_time : datetime, room : str) : None
+    + get_sessions() : List[Session]
+    + delete_session(session_id : int) : None
+    + get_attendees() : List[Attendee]
+    + get_payments() : List[Payment]
+
+
+    - ticket_price : float
+}
+
+class Session{
+    - id : int
+    - start_time : datetime
+    - end_time : datetime
+    - type : SessionType
+
+
+    + set_start_time( time : datetime ) : None
+    + set_end_time( time : datetime ) : None
+    + get_start_time() : datetime
+    + get_end_time() : datetime
+
+    + get_id() : int
+    + get_type() : SessionType
+
+    + add_speaker( user_id : int ) : None
+    + remove_speaker( user_id : int ) : None
+    + get_speakers() : List[Speaker]
+    
+}
+
+class OnlineSession{
+    - link : str
+    - meeting_platform : str
+
+    + set_link( link : str ) : None
+    + set_meeting_platform( meeting_platform : str ) : None
+    
+    + get_link() : str
+    + get_meeting_platform() : str
+}
+
+class InPersonSession{
+    - room : str
+
+    + set_room( room : str ): None
+    + get_room() : str
+}
+
+
+
+class Attendee{
+    - preferences : str
+    - ticket_status : str
+    - type : AttendeeType
+}
+
+class Learner{
+    - learner_type : LearnerType
+
+    + get_type
+    + register(event_id : int) : Payment
+    + get_registered_events() : List[Event]
+    + get_available_events() : List[Event]
+}
+
+class Speaker{
+    - specialization : str
+    - presentation_topics : str
+}
+
+
+
+class SharedCalendar{
+    - id : int
+}
+class Slot{
+    - id : int
+    - start_time : datetime
+    - end_time : datetime
+}
+
+class PaymentProcessor{
+    - id : int
+    - currency : str
+    - create_stripe_intent( amount : float ) : str
+
+    + confirm_payment( stripe_id : str ) : bool
+    + cancel_payment ( stripe_id ) : bool
+    + create_payment( user_id : int, amount : float ) : int
+
+    + get_payments() : List[Payment] 
+}
+
+class Payment{
+    - id : int
+    - amount : float
+    - created_at : datetime
+    - status : PaymentStatus
+    - currency : str
+    - stripe_intent : str
+}
+
+
+User <|-- StakeHolder
+User <|-- Organizer
+User <|-- Attendee
+User <|-- Admin
+
+✅
+Attendee <|-- Learner
+Attendee <|-- Speaker
+✅
+Event "1"--"1" Organizer
+Event "1"--"1" StakeHolder
+✅
+Session --* Event
+✅
+Session <|-- OnlineSession
+Session <|-- InPersonSession
+✅
+Session "1"--"1..*" Speaker
+Event -- Attendee
+✅
+PaymentProcessor "1"--"1" Event
+Payment --* PaymentProcessor
+✅
+Payment "*"--"1" Learner
+✅
+SharedCalendar "1"--"1" Event
+SharedCalendar -- Speaker
+SharedCalendar -- Organizer
+SharedCalendar -- StakeHolder
+
+✅
+SharedCalendar *-- Slot
+
+Slot "*"--"1" Speaker
+Slot "*"--"1" Organizer
+Slot "*"--"1" StakeHolder
+@enduml
