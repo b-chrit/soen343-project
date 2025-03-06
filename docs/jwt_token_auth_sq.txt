@@ -1,0 +1,45 @@
+title JWT Token Authorization
+actor Client
+
+participant "Controller (REST API)" as controller
+participant "JWT Library" as jwt_Manager
+participant ":User" as user_db
+participant "user:User" as user
+
+
+
+#Client -> controller:HTTP Request\nHeaders : {"Authorization" : "bearer $(token)"}
+activate controller
+
+controller->controller: authorize(token, user_type)
+activate controller
+controller->jwt_Manager:get_jwt_identity(token)
+activate jwt_Manager
+controller<--jwt_Manager:user_id
+deactivate jwt_Manager
+controller->user_db:find(user_id)
+activate user_db
+alt User Exists
+controller<--user_db:user
+deactivate user_db
+controller->user:get_type()
+activate user
+controller<--user:type
+deactivate user
+alt user.user_type==user_type
+
+controller->controller:Process Request\nreturn user:User
+activate controller
+note over controller: controller: Return User Object
+
+deactivate controller
+else Unauthorized User Type
+Client<--controller: 403 Forbiden
+end
+else 
+activate user_db
+controller<--user_db:None
+deactivate user_db
+Client<--controller:401 Unauthorized
+deactivate controller
+end
