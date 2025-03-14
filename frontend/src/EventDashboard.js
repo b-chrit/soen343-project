@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import HeaderBar from "./HeaderBar";
+import { useNavigate } from "react-router-dom";
+
 const eventsData = {
   yesterday: [
     {
@@ -58,7 +60,8 @@ const eventsData = {
   ],
 };
 
-export default function EventDashboard({ onViewCalendar, onNavigateEvents, onNavigateProfile }) {
+export default function EventDashboard() {
+  const navigate = useNavigate(); // Use navigate for navigation
   const days = ["yesterday", "today", "tomorrow"];
   const [dayIndex, setDayIndex] = useState(1);
 
@@ -77,8 +80,8 @@ export default function EventDashboard({ onViewCalendar, onNavigateEvents, onNav
       {/* REUSABLE HEADER WITH MENU OPTIONS */}
       <HeaderBar
         menuOptions={[
-          { label: "EVENTS", onClick: onNavigateEvents },
-          { label: "PROFILE", onClick: onNavigateProfile  },
+          { label: "EVENTS", onClick: () => navigate("/events") },
+          { label: "PROFILE", onClick: () => navigate("/profile") },
           { label: "LOGOUT", onClick: () => console.log("Logging Out") },
         ]}
       />
@@ -130,7 +133,7 @@ export default function EventDashboard({ onViewCalendar, onNavigateEvents, onNav
             <div className="mt-8">
               <button
                 className="bg-black text-white py-2 px-8 rounded-lg"
-                onClick={onViewCalendar}
+                onClick={() => navigate("/calendar")} // Handle calendar navigation here
               >
                 View Events Calendar
               </button>

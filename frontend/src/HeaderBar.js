@@ -1,13 +1,19 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-export default function HeaderBar({ menuOptions = [], onNavigateDashboard }) {
+export default function HeaderBar({ menuOptions = [] }) {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();  // Use navigate directly here
+
+  const handleLogoClick = () => {
+    navigate("/");  // Always navigate to the homepage
+  };
 
   return (
     <header className="bg-black text-white p-2 flex justify-between items-center w-full relative">
       <h1 
         className="text-xl font-bold pl-4 cursor-pointer" 
-        onClick={onNavigateDashboard} 
+        onClick={handleLogoClick}  // Navigate to homepage when logo is clicked
       >
         SEES
       </h1>

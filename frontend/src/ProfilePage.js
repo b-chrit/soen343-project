@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import HeaderBar from "./HeaderBar";
-export default function ProfilePage({ onBack, onNavigateEvents, onNavigateProfile }) {
+import { useNavigate } from "react-router-dom";
+
+export default function ProfilePage({ onBack }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: "JANE DOE",
@@ -9,6 +11,8 @@ export default function ProfilePage({ onBack, onNavigateEvents, onNavigateProfil
     phone: "(123) 456-7890",
     role: "ATTENDEE",
   });
+
+  const navigate = useNavigate(); // Use navigate for navigation
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -24,12 +28,12 @@ export default function ProfilePage({ onBack, onNavigateEvents, onNavigateProfil
   return (
     <div className="min-h-screen bg-white flex flex-col relative">
       <HeaderBar
-          menuOptions={[
-              { label: "EVENTS", onClick: onNavigateEvents },
-              { label: "PROFILE", onClick: onNavigateProfile  },
-              { label: "LOGOUT", onClick: () => console.log("Logging Out") },
-            ]}
-        />
+        menuOptions={[
+          { label: "EVENTS", onClick: () => navigate("/events") }, // Use navigate here
+          { label: "PROFILE", onClick: () => navigate("/profile") }, // Use navigate here
+          { label: "LOGOUT", onClick: () => console.log("Logging Out") },
+        ]}
+      />
       {/* MAIN CONTENT */}
       <div className="px-16 py-8 flex flex-col">
         {/* BACK BUTTON & TITLE */}
