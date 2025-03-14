@@ -1,0 +1,27 @@
+title Create Event
+actor Client
+participant "Controller (REST API)" as controller
+
+participant "organizer:Organizer" as organizer
+participant ":User" as user_static
+participant ":Event" as event_static
+
+
+
+
+Client->controller: POST /create_event\nHeaders : {\n Authorization : token\n}\nJSON : {\n "title":string\n "start":string\n ...\n}
+#controller->controller: user_id := Decode JWT token
+
+controller->user_static : find(user_id)
+controller<--user_static: organizer
+
+alt Organizer Exist
+controller->organizer:create_event(title, start, ...)
+organizer->event_static:create(event)
+organizer<--event_static:event_id
+controller<--organizer:True
+#controller->controller:Encode to JSON
+Client<--controller: 201 Created
+else Not an Organizer
+Client<--controller:403 Forbidden
+end

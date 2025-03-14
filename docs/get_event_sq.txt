@@ -1,0 +1,27 @@
+title Get Organizer's Event
+actor Client
+participant "Controller (REST API)" as controller
+
+participant "organizer:Organizer" as organizer
+participant ":User" as user_static
+participant ":Event" as event_static
+
+
+
+
+Client->controller: GET /get_event\nHeaders : {\n Authorization : token\n}
+#controller->controller: user_id := Decode JWT token
+
+controller->user_static : find(user_id)
+controller<--user_static: organizer
+
+alt Organizer Exist
+controller->organizer:get_event()
+organizer->event_static:find(event_id)
+organizer<--event_static:event
+controller<--organizer:event
+#controller->controller:Encode to JSON
+Client<--controller: JSON response {\n "event":{\n    "title":string,\n    "start":string\n     ...\n}
+else Not an Organizer
+Client<--controller:403 Forbidden
+end

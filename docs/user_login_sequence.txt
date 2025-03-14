@@ -1,0 +1,31 @@
+title User Login
+
+actor Client
+participant "Controller (REST API)" as controller
+participant ":User" as user_static
+participant "Session (SQLAlchemy)" as session
+database "<<table>>\nusers" as user_table
+participant "User:User" as user
+
+
+
+Client->controller: POST /login {email, password}
+controller->user_static: auth(email, password)
+user_static->session: Create Session
+#user_static<--session: session
+user_static->session: query(User).filter(User.email == email).first()
+session->user_table: Get from database
+
+session<--user_table: User Object or None
+user_static<--session: User Object or None
+alt User Found
+user_static->user:check_password(password)
+user_static<--user:True or False
+end
+alt Password Valid
+controller<--user_static:User Object
+Client<--controller: JSON response {\n  "status" : "ok",\n  "token" : JWTtoken\n}
+else User not Found or Password Invalid
+controller<--user_static: None
+Client<--controller: JSON response {\n  "status" : "invalid_credentials"\n}
+end
