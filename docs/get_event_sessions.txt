@@ -1,0 +1,26 @@
+title Get Event Sessions
+
+actor Client
+participant "Controller (REST API)" as controller
+
+participant "organizer:Organizer" as organizer
+participant ":Event" as event_static
+participant "event:Event" as event
+participant ":Session" as session_static
+
+Client->controller:GET /get_sessions\nHeaders : {\n "Authorization" : token\n}
+activate controller
+
+
+
+ref over controller: JWT Token Authorization\norganizer := authorize(token, 'organizer')
+activate controller
+controller->organizer:get_event()
+organizer->event_static:find(event_id)
+organizer<--event_static:event
+controller<--organizer:event
+controller->event:get_sessions()
+event->session_static:find_all(event_id)
+event<--session_static:sessions
+controller<--event:sessions
+Client<--controller:JSON response\n{\n  sessions:[\n   {},\n   {},\n   ...\n  ]\n}
