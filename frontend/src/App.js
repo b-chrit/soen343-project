@@ -34,7 +34,7 @@ export default function App() {
           />
         )}
         {view === "profile" && (
-          <ProfilePage onBack={() => setView("dashboard")} />
+          <ProfilePage onBack={() => setView("dashboard")} onNavigateProfile={() => setView("profile")}  onNavigateEvents={() => setView("events")}/>
         )}
       </div>
     </div>

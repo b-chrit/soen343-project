@@ -1,38 +1,138 @@
-.App {
+/* Full-screen layout */
+.register-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* Left Half - Background Image */
+.register-image {
+  flex: 1;
+  background: url('./logo.jpg') center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.register-title {
+  position: absolute;
+  top: 20px;
+  left: 30px;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* Right Half - Login Box */
+.register-box {
+  flex: 1;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 50px;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.register-box h2 {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 20px; /* Add more space between heading and form */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Form container */
+.register-box form {
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 20px; /* Add space between form and buttons */
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+.register-box p {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+/* Input fields */
+.form-control {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px; /* Adjust spacing between inputs */
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+/* Buttons */
+.btn-dark,
+.btn-outline-dark {
+  background-color: black; 
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  padding: 12px 20px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: 100%; /* Make the buttons full-width */
+  margin-bottom: 20px;
+}
+
+.btn-dark:hover,
+.btn-outline-dark:hover {
+  background-color: #333; /* Darken the button on hover */
+}
+
+/* Continue as Guest Button (btn-outline-dark) */
+.btn-outline-dark {
+  background-color: transparent;
+  border: 2px solid black; 
+  color: black;
+  font-weight: bold;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.btn-outline-dark:hover {
+  background-color: black;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.button-container {
+  margin-bottom: 20px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+/* Links */
+a {
+  text-decoration: none;
+  color: black;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Guest message styling */
+.guest-message {
+  color: green;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+/* Responsive: Stack on small screens */
+@media (max-width: 768px) {
+  .register-container {
+    flex-direction: column;
   }
-  to {
-    transform: rotate(360deg);
+
+  .register-image {
+    display: none;  /* Hide image on smaller screens */
+  }
+
+  .register-box {
+    width: 100%;
+    padding: 20px;
   }
 }

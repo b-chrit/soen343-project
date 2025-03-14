@@ -1,9 +1,35 @@
+import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
+import HeaderBar from "./HeaderBar";
+export default function ProfilePage({ onBack, onNavigateEvents, onNavigateProfile }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "JANE DOE",
+    email: "JANE.DOE@GMAIL.COM",
+    phone: "(123) 456-7890",
+    role: "ATTENDEE",
+  });
 
-export default function ProfilePage({ onBack }) {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleEditClick = () => setIsEditing(true);
+  const handleCancelClick = () => setIsEditing(false);
+  const handleConfirmClick = () => {
+    // Save changes (can be extended for API calls)
+    setIsEditing(false);
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col relative">
-
+      <HeaderBar
+          menuOptions={[
+              { label: "EVENTS", onClick: onNavigateEvents },
+              { label: "PROFILE", onClick: onNavigateProfile  },
+              { label: "LOGOUT", onClick: () => console.log("Logging Out") },
+            ]}
+        />
       {/* MAIN CONTENT */}
       <div className="px-16 py-8 flex flex-col">
         {/* BACK BUTTON & TITLE */}
@@ -25,50 +51,46 @@ export default function ProfilePage({ onBack }) {
 
           {/* Form Fields (Two per Row) */}
           <div className="mt-6 grid grid-cols-2 gap-6">
-            <div className="flex flex-col">
-              <label className="text-sm text-gray-700">NAME</label>
-              <input
-                type="text"
-                value="JANE DOE"
-                className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg"
-                readOnly
-              />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm text-gray-700">EMAIL</label>
-              <input
-                type="text"
-                value="JANE.DOE@GMAIL.COM"
-                className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg"
-                readOnly
-              />
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm text-gray-700">PHONE NUMBER</label>
-              <input
-                type="text"
-                value="(123) 456-7890"
-                className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg"
-                readOnly
-              />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm text-gray-700">ROLE</label>
-              <input
-                type="text"
-                value="ATTENDEE"
-                className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg"
-                readOnly
-              />
-            </div>
+            {Object.keys(formData).map((key) => (
+              <div key={key} className="flex flex-col">
+                <label className="text-sm text-gray-700">{key.toUpperCase()}</label>
+                <input
+                  type="text"
+                  name={key}
+                  value={formData[key]}
+                  onChange={handleChange}
+                  className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg"
+                  readOnly={!isEditing}
+                />
+              </div>
+            ))}
           </div>
 
-          {/* Edit Button (Bottom Right, Perfect Styling) */}
-          <div className="flex justify-end mt-6">
-            <button className="py-2 px-6 bg-black text-white font-medium border border-black transition hover:bg-white hover:text-black">
-              EDIT
-            </button>
+          {/* Action Buttons */}
+          <div className="flex justify-end mt-6 space-x-4">
+            {isEditing ? (
+              <>
+                <button
+                  className="py-2 px-6 bg-gray-300 text-black font-medium border border-gray-500 transition hover:bg-gray-400"
+                  onClick={handleCancelClick}
+                >
+                  CANCEL
+                </button>
+                <button
+                  className="py-2 px-6 bg-black text-white font-medium border border-black transition hover:bg-white hover:text-black"
+                  onClick={handleConfirmClick}
+                >
+                  CONFIRM
+                </button>
+              </>
+            ) : (
+              <button
+                className="py-2 px-6 bg-black text-white font-medium border border-black transition hover:bg-white hover:text-black"
+                onClick={handleEditClick}
+              >
+                EDIT
+              </button>
+            )}
           </div>
         </div>
       </div>
