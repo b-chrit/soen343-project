@@ -125,11 +125,6 @@ def get_event():
                 if event_id:
                     event = Event.find(session, event_id=event_id)
                     if event:
-                        # Fetch the actual organizer name
-                        organizer_name = event.organizer.get_organization_name() if event.organizer else "N/A"
-                        # Fetch the actual sponsor name
-                        sponsor_name = event.sponsor.get_name() if event.sponsor else "N/A"
-
                         event_data.append({
                             'title': event.get_title(),
                             'location': event.get_location(),
@@ -137,8 +132,8 @@ def get_event():
                             'description': event.get_description(),
                             'start': str(event.get_start()),
                             'end': str(event.get_end()),
-                            'organizer': organizer_name,  # Use actual organizer name
-                            'sponsor': sponsor_name,      # Use actual sponsor name
+                            'organizer_id': event.get_organizer(),  # Added organizer_id
+                            'sponsor_id': event.get_sponsor()       # Added sponsor_id
                         })
                 return jsonify(event_data), 200
 
@@ -146,11 +141,6 @@ def get_event():
         public_events = Event.find(session)  # Fetching all events, could be optimized by adding a condition for public events only
         if public_events:
             for event in public_events:
-                # Fetch the actual organizer name
-                organizer_name = event.organizer.get_organization_name() if event.organizer else "N/A"
-                # Fetch the actual sponsor name
-                sponsor_name = event.sponsor.get_name() if event.sponsor else "N/A"
-
                 event_data.append({
                     'title': event.get_title(),
                     'location': event.get_location(),
@@ -158,8 +148,8 @@ def get_event():
                     'description': event.get_description(),
                     'start': str(event.get_start()),
                     'end': str(event.get_end()),
-                    'organizer': organizer_name,  # Use actual organizer name
-                    'sponsor': sponsor_name,      # Use actual sponsor name
+                    'organizer_id': event.get_organizer(),  # Added organizer_id
+                    'sponsor_id': event.get_sponsor()       # Added sponsor_id
                 })
             return jsonify(event_data), 200
 
