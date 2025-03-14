@@ -15,7 +15,7 @@ class Event(Base):
     __description   = Column(String,    nullable    = False)
     __location      = Column(String,    nullable    = False)
 
-    __organizer_id  = Column(Integer, ForeignKey('organizers.id'), unique=True)
+    __organizer_id  = Column(Integer, ForeignKey('organizers.id'))
     __sponsor_id    = Column(Integer, ForeignKey('stakeholders.id'), nullable=True)  # FK to Stakeholder (Sponsor)
 
     sponsor = relationship("Stakeholder", backref="sponsored_events", uselist=False)  # Relationship with Stakeholder

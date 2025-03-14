@@ -1,18 +1,34 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, Eye, Search } from "lucide-react";
-import EventModal from "./EventModal";
-import HeaderBar from "./HeaderBar";
+import { ChevronLeft, ChevronRight, Search, Filter, Eye } from "lucide-react";
+import EventModal from "../EventModal";
+import HeaderBar from "../HeaderBar";
 import { useNavigate } from "react-router-dom";
+
 const eventsPerPage = 5;
+
+const categoryColors = {
+  Technology: "bg-blue-100 text-blue-800",
+  Finance: "bg-green-100 text-green-800",
+  Business: "bg-yellow-100 text-yellow-800",
+  Marketing: "bg-purple-100 text-purple-800",
+  "AI & Tech": "bg-pink-100 text-pink-800",
+  "Tech & Business": "bg-teal-100 text-teal-800",
+};
 
 export default function EventsPage({ onBack }) {
   const navigate = useNavigate();
   const [eventsData, setEventsData] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]); // New state for filtered events
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(""); // New state for search query
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false); // Filter visibility
+  const [selectedCategory, setSelectedCategory] = useState(""); // Category filter
+  const [selectedDate, setSelectedDate] = useState(""); // Date filter
+  const [selectedTime, setSelectedTime] = useState(""); // Time filter
   const searchRef = useRef(null);
 
   // Fetch events from backend on mount
@@ -20,14 +36,14 @@ export default function EventsPage({ onBack }) {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-    
+
         const token = localStorage.getItem("token");
-    
+
         if (!token) {
           navigate("/login");
           return;
         }
-    
+
         const response = await fetch("http://localhost:5003/get_event", {
           method: "GET",
           headers: {
@@ -35,44 +51,77 @@ export default function EventsPage({ onBack }) {
             Authorization: `Bearer ${token}`,
           },
         });
-    
+
         if (!response.ok) {
           throw new Error("Failed to fetch events");
         }
-    
+
         const data = await response.json();
         console.log("Event Data:", data); // Check the actual structure of the data
-    
+
         // Map API data to match table fields
         const mappedEvents = data.map((event) => {
-          const start = event.start;  // Use the correct property name from the backend response.
-          const date = start ? start.split(" ")[0] : "N/A";  // Ensure start is valid before splitting
-          const time = start ? start.split(" ")[1] : "N/A";  // Same for time
-        
+          const start = event.start;
+          const date = start ? start.split(" ")[0] : "N/A";
+          const time = start ? start.split(" ")[1] : "N/A";
+          const categoryColor = categoryColors[event.category] || "bg-gray-100 text-gray-800"; // Set color based on category
+
           return {
-            title: event.title,  // Use the correct property name for title
-            organizer: event.organizer_id ? `Organizer #${event.organizer_id}` : "N/A",  // Use organizer_id
-            category: event.category || "N/A",  // Default if undefined
-            categoryColor: "bg-blue-100 text-blue-800",  // Example styling
+            title: event.title,
+            organizer: event.organizer_name || "N/A",
+            category: event.category || "N/A",
+            categoryColor: categoryColor,
             date: date,
             time: time,
-            sponsored: event.sponsor_id ? "Yes" : "No",  // Use sponsor_id
-            sponsor: event.sponsor_id ? `Sponsor #${event.sponsor_id}` : "N/A",  // Use sponsor_id
+            sponsored: event.sponsor_name ? "Yes" : "No",
+            sponsor: event.sponsor_name || "N/A",
+            organizer_name: event.organizer_name,
+            sponsor_name: event.sponsor_name,
+            description: event.description,
+            location: event.location,
+            start: event.start,
+            end: event.end,
           };
         });
-        
-    
+
         setEventsData(mappedEvents);
+        setFilteredEvents(mappedEvents); // Initially set filteredEvents to all events
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    
-    
+
     fetchEvents();
-  }, [navigate]); // Adding navigate as a dependency
+  }, [navigate]);
+
+  // Search function to filter events
+  useEffect(() => {
+    let filtered = eventsData.filter((event) =>
+      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.organizer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.sponsor_name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // Apply additional filter by category, date, and time
+    if (selectedCategory) {
+      filtered = filtered.filter((event) =>
+        event.category.toLowerCase().includes(selectedCategory.toLowerCase())
+      );
+    }
+
+    if (selectedDate) {
+      filtered = filtered.filter((event) => event.date === selectedDate);
+    }
+
+    if (selectedTime) {
+      filtered = filtered.filter((event) => event.time === selectedTime);
+    }
+
+    setFilteredEvents(filtered);
+  }, [searchQuery, eventsData, selectedCategory, selectedDate, selectedTime]);
 
   const handleClickOutside = (event) => {
     if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -86,9 +135,9 @@ export default function EventsPage({ onBack }) {
     }
   };
 
-  const totalPages = Math.ceil(eventsData.length / eventsPerPage);
+  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
   const startIndex = (currentPage - 1) * eventsPerPage;
-  const displayedEvents = eventsData.slice(startIndex, startIndex + eventsPerPage);
+  const displayedEvents = filteredEvents.slice(startIndex, startIndex + eventsPerPage);
 
   return (
     <div className="min-h-screen bg-white flex flex-col relative" onClick={handleClickOutside}>
@@ -116,8 +165,12 @@ export default function EventsPage({ onBack }) {
             View My Registrations
           </button>
           <div className="flex items-center space-x-4">
-            <button className="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg">
-              Filter ▼
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)} // Toggle filter menu visibility
+              className="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg flex items-center space-x-2"
+            >
+              <Filter className="w-4 h-4" />
+              <span>Filter</span>
             </button>
 
             <div ref={searchRef} className="relative">
@@ -127,6 +180,7 @@ export default function EventsPage({ onBack }) {
                   autoFocus
                   placeholder="Search"
                   className="border border-gray-300 py-2 px-4 rounded-lg"
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                 />
               ) : (
@@ -141,6 +195,49 @@ export default function EventsPage({ onBack }) {
             </div>
           </div>
         </div>
+
+        {/* Filter Menu */}
+        {isFilterOpen && (
+          <div className="bg-white shadow-md p-4 rounded-lg absolute top-20 left-1/2 transform -translate-x-1/2 w-80 z-10">
+            <div className="mb-4">
+              <label htmlFor="category" className="block text-sm font-semibold text-gray-700">Category</label>
+              <input
+                id="category"
+                type="text"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                placeholder="Filter by category"
+                className="w-full mt-2 p-2 border border-gray-300 rounded"
+              />
+            </div>
+            <div className="mb-4">
+              <label htmlFor="date" className="block text-sm font-semibold text-gray-700">Date</label>
+              <input
+                id="date"
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full mt-2 p-2 border border-gray-300 rounded"
+              />
+            </div>
+            <div className="mb-4">
+              <label htmlFor="time" className="block text-sm font-semibold text-gray-700">Time</label>
+              <input
+                id="time"
+                type="time"
+                value={selectedTime}
+                onChange={(e) => setSelectedTime(e.target.value)}
+                className="w-full mt-2 p-2 border border-gray-300 rounded"
+              />
+            </div>
+            <button
+              onClick={() => setIsFilterOpen(false)}
+              className="bg-black text-white py-2 px-6 rounded-lg mt-4"
+            >
+              Apply Filters
+            </button>
+          </div>
+        )}
 
         {loading && <p>Loading events...</p>}
         {error && <p className="text-red-500">{error}</p>}

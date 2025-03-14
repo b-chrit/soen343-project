@@ -4,6 +4,7 @@ from flask_cors import CORS  # To enable Cross-Origin Resource Sharing (CORS)
 from dotenv import load_dotenv  # Load environment variables
 from models.users import User, Organizer
 from models.users.attendee import Attendee  # Added import for Attendee
+from models.users.stakeholder import Stakeholder
 from models import Event
 import os
 from models.config import SQLSession
@@ -125,6 +126,13 @@ def get_event():
                 if event_id:
                     event = Event.find(session, event_id=event_id)
                     if event:
+                        organizer_name = f"{organizer.get_first_name()} {organizer.get_last_name()}"
+                        sponsor_name = None
+                        # Get the sponsor's name if available
+                        if event.get_sponsor():
+                            sponsor = Stakeholder.find(session, user_id=event.get_sponsor())
+                            if sponsor:
+                                sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
                         event_data.append({
                             'title': event.get_title(),
                             'location': event.get_location(),
@@ -132,8 +140,8 @@ def get_event():
                             'description': event.get_description(),
                             'start': str(event.get_start()),
                             'end': str(event.get_end()),
-                            'organizer_id': event.get_organizer(),  # Added organizer_id
-                            'sponsor_id': event.get_sponsor()       # Added sponsor_id
+                            'organizer_name': organizer_name,  # Added organizer_name
+                            'sponsor_name': sponsor_name       # Added sponsor_name
                         })
                 return jsonify(event_data), 200
 
@@ -141,6 +149,14 @@ def get_event():
         public_events = Event.find(session)  # Fetching all events, could be optimized by adding a condition for public events only
         if public_events:
             for event in public_events:
+                organizer = Organizer.find(session, user_id=event.get_organizer())
+                organizer_name = f"{organizer.get_first_name()} {organizer.get_last_name()}"
+                sponsor_name = None
+                # Get the sponsor's name if available
+                if event.get_sponsor():
+                    sponsor = Stakeholder.find(session, user_id=event.get_sponsor())
+                    if sponsor:
+                        sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
                 event_data.append({
                     'title': event.get_title(),
                     'location': event.get_location(),
@@ -148,12 +164,13 @@ def get_event():
                     'description': event.get_description(),
                     'start': str(event.get_start()),
                     'end': str(event.get_end()),
-                    'organizer_id': event.get_organizer(),  # Added organizer_id
-                    'sponsor_id': event.get_sponsor()       # Added sponsor_id
+                    'organizer_name': organizer_name,  # Added organizer_name
+                    'sponsor_name': sponsor_name       # Added sponsor_name
                 })
             return jsonify(event_data), 200
 
         return jsonify({'error': 'No events found'}), 404
+
 
 # ----------------------- 
 # ✅ Create Event (Organizer Only)

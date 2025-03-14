@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import EventDashboard from "./EventDashboard";
-import CalendarView from "./CalendarView";
-import EventsPage from "./EventsPage";
+import EventDashboard from "./attendee/EventDashboard";
+import CalendarView from "./attendee/CalendarView";
+import EventsPage from "./attendee/EventsPage";
 import ProfilePage from "./ProfilePage";
 import Login from "./Login";
 import Register from "./Register";
