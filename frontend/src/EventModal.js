@@ -1,17 +1,16 @@
 import { useState } from "react";
-import { CheckCircle, XCircle } from "lucide-react"; // Success icon for better feedback
+import { CheckCircle, XCircle } from "lucide-react";
 
 export default function EventModal({ event, onClose, updateEvents }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isSuccess, setIsSuccess] = useState(false); // State for success message
-  const [isRegistered, setIsRegistered] = useState(event.isRegistered); // Use passed isRegistered value
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(event.isRegistered);
 
-  // Register or cancel event
   const handleRegistration = async () => {
     setIsLoading(true);
     setError(null);
-    setIsSuccess(false); // Reset success message before attempting registration
+    setIsSuccess(false);
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -37,17 +36,15 @@ export default function EventModal({ event, onClose, updateEvents }) {
         throw new Error(isRegistered ? "Failed to cancel registration" : "Failed to register for event");
       }
 
-      setIsSuccess(true); // Show success message
-      setIsRegistered(!isRegistered); // Toggle registration status
+      setIsSuccess(true);
+      setIsRegistered(!isRegistered);
 
-      // Call updateEvents function to update the registered events list in parent
       if (updateEvents) {
-        updateEvents(event.id, !isRegistered); // Update registration status in the parent
+        updateEvents(event.id, !isRegistered);
       }
 
-      // Optionally close the modal after a brief delay for the user to see the success
       setTimeout(() => {
-        onClose(); // Close the modal after success
+        onClose();
       }, 2000);
     } catch (err) {
       setError(err.message);
@@ -56,7 +53,7 @@ export default function EventModal({ event, onClose, updateEvents }) {
     }
   };
 
-  if (!event) return null; // Early return to prevent rendering if event is not available
+  if (!event) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -106,12 +103,18 @@ export default function EventModal({ event, onClose, updateEvents }) {
           <strong>Description:</strong> {event.description || "No additional details available for this event."}
         </p>
 
-        {/* Button - Initially Black, Hover to White */}
+        {/* Register / Cancel Button */}
         <div className="flex justify-center mt-8">
           <button
             onClick={handleRegistration}
             disabled={isLoading}
-            className={`py-3 px-8 ${isLoading ? "bg-gray-300 cursor-not-allowed" : "bg-black text-white"} font-medium rounded-lg border border-black transition-all duration-300 hover:bg-white hover:text-black`}
+            className={`py-3 px-8 font-medium rounded-lg border transition-all duration-300 
+              ${isLoading
+                ? "bg-gray-300 cursor-not-allowed border-gray-300 text-gray-500"
+                : isRegistered
+                ? "bg-red-600 text-white border-red-600 hover:bg-white hover:text-red-600"
+                : "bg-black text-white border-black hover:bg-white hover:text-black"}
+              `}
           >
             {isLoading
               ? "Processing..."
