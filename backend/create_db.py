@@ -1,6 +1,6 @@
 from models.config import Base, engine
 from models import Event, SQLSession
-from datetime import datetime
+from datetime import datetime, timedelta  # Added timedelta
 from models.users import User, Organizer, Stakeholder  # Import Stakeholder for sponsor
 
 Base.metadata.create_all(engine)
@@ -49,7 +49,7 @@ with SQLSession() as session:
     for stakeholder in stakeholders:
         User.add(session, stakeholder)
 
-    # Create 10 events with meaningful data linked to organizers and sponsors
+ # Create 10 events with meaningful data linked to organizers and sponsors
     event_data = [
         {
             'title': 'Tech Expo 2025',
@@ -150,17 +150,102 @@ with SQLSession() as session:
             'location': '7788 City Blvd, Montreal',
             'organizer_id': 10,
             'sponsor_id': 10
+        },
+        {
+            'title': 'Sustainable Architecture Conference 2025',
+            'start': '2025-12-15 10:00:00',
+            'end': '2025-12-15 16:00:00',
+            'category': 'Urban Development',
+            'description': 'A conference showcasing sustainable design and construction techniques for modern cities.',
+            'location': '2233 Green Building Lane, Montreal',
+            'organizer_id': 9,
+            'sponsor_id': 8
+        },
+        {
+            'title': 'Future Mobility Summit 2025',
+            'start': '2025-12-15 11:00:00',
+            'end': '2025-12-15 17:30:00',
+            'category': 'Transportation & Mobility',
+            'description': 'An event focused on the future of urban transportation, including autonomous vehicles and smart transit systems.',
+            'location': '4455 Mobility Blvd, Montreal',
+            'organizer_id': 8,
+            'sponsor_id': 7
+        }
+
+    ]
+
+
+    today = datetime.now()
+
+    dynamic_events = [
+    # Yesterday events (two)
+        {
+            'title': 'Entrepreneurship Bootcamp 2025',
+            'start': (today - timedelta(days=1)).replace(hour=9, minute=0, second=0),
+            'end': (today - timedelta(days=1)).replace(hour=17, minute=0, second=0),
+            'category': 'Business',
+            'description': 'A full-day workshop designed to help budding entrepreneurs turn their ideas into action plans.',
+            'location': '500 Startup Blvd, Montreal',
+            'organizer_id': 1,
+            'sponsor_id': 2
+        },
+        {
+            'title': 'Marketing Strategies Forum 2025',
+            'start': (today - timedelta(days=1)).replace(hour=10, minute=0, second=0),
+            'end': (today - timedelta(days=1)).replace(hour=16, minute=0, second=0),
+            'category': 'Marketing',
+            'description': 'An event discussing modern marketing trends, SEO, and content strategies.',
+            'location': '600 Digital Plaza, Montreal',
+            'organizer_id': 2,
+            'sponsor_id': 3
+        },
+
+        # Today events (two)
+        {
+            'title': 'Cybersecurity Summit 2025',
+            'start': today.replace(hour=9, minute=0, second=0),
+            'end': today.replace(hour=17, minute=0, second=0),
+            'category': 'Technology',
+            'description': 'A summit focused on the latest cybersecurity threats and best practices for businesses.',
+            'location': '900 Cyber Ave, Montreal',
+            'organizer_id': 3,
+            'sponsor_id': 4
+        },
+        {
+            'title': 'AI in Healthcare Conference 2025',
+            'start': today.replace(hour=10, minute=0, second=0),
+            'end': today.replace(hour=18, minute=0, second=0),
+            'category': 'AI & Tech',
+            'description': 'Exploring how AI is transforming healthcare from diagnostics to treatment planning.',
+            'location': '101 HealthTech Way, Montreal',
+            'organizer_id': 4,
+            'sponsor_id': 5
         }
     ]
 
-    for event in event_data:
-        organizer = organizers[event['organizer_id'] - 1]  # Get the organizer object using the id (1-based index)
-        sponsor = stakeholders[event['sponsor_id'] - 1]  # Get the sponsor object using the id (1-based index)
-        
+    # Combine static and dynamic events
+    all_events = event_data + [
+        {
+            'title': e['title'],
+            'start': e['start'].strftime("%Y-%m-%d %H:%M:%S"),
+            'end': e['end'].strftime("%Y-%m-%d %H:%M:%S"),
+            'category': e['category'],
+            'description': e['description'],
+            'location': e['location'],
+            'organizer_id': e['organizer_id'],
+            'sponsor_id': e['sponsor_id']
+        }
+        for e in dynamic_events
+    ]
+
+    # Create the events in the DB
+    for event in all_events:
+        organizer = organizers[event['organizer_id'] - 1]
+        sponsor = stakeholders[event['sponsor_id'] - 1]
+
         event_start = datetime.strptime(event['start'], "%Y-%m-%d %H:%M:%S")
         event_end = datetime.strptime(event['end'], "%Y-%m-%d %H:%M:%S")
-        
-        # Create the event for the organizer and assign sponsor
+
         organizer.create_event(
             session,
             event['title'],
@@ -169,7 +254,7 @@ with SQLSession() as session:
             event['category'],
             event['description'],
             event['location'],
-            sponsor.id  # Use sponsor's ID here, not the sponsor name
+            sponsor.id
         )
 
-    print("10 attendees, 10 organizers, 10 stakeholders, and 10 events with sponsors have been added successfully!")
+    print("✅ 10 attendees, 10 organizers, 10 stakeholders, and events (static + dynamic past/future) have been added successfully!")

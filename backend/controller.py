@@ -200,64 +200,67 @@ def get_event():
     event_data = []
     user_id = int(get_jwt_identity())
 
-    # Fetch the events
     with SQLSession() as session:
-        # Try to get the organizer first
+        # Check if the user is an organizer first
         organizer = Organizer.find(session, user_id)
 
-        if organizer:
-            if organizer.get_type() == 'organizer':
-                # Return events associated with the organizer
-                event_id = organizer.get_event_id()
-                if event_id:
-                    event = Event.find(session, event_id=event_id)
-                    if event:
-                        organizer_name = f"{organizer.get_first_name()} {organizer.get_last_name()}"
-                        sponsor_name = None
-                        # Get the sponsor's name if available
-                        if event.get_sponsor():
-                            sponsor = Stakeholder.find(session, user_id=event.get_sponsor())
-                            if sponsor:
-                                sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
-                        event_data.append({
-                            'id': event.get_id(),  # Add the event ID here
-                            'title': event.get_title(),
-                            'location': event.get_location(),
-                            'category': event.get_category(),
-                            'description': event.get_description(),
-                            'start': str(event.get_start()),
-                            'end': str(event.get_end()),
-                            'organizer_name': organizer_name,  # Added organizer_name
-                            'sponsor_name': sponsor_name       # Added sponsor_name
-                        })
-                return jsonify(event_data), 200
+        if organizer and organizer.get_type() == 'organizer':
+            event_id = organizer.get_event_id()
+            if event_id:
+                event = Event.find(session, event_id=event_id)
+                if event:
+                    organizer_name = f"{organizer.get_first_name()} {organizer.get_last_name()}"
+                    sponsor_name = None
 
-        # If the user is an attendee or admin, fetch all public events
-        public_events = Event.find(session)  # Fetching all events, could be optimized by adding a condition for public events only
+                    if event.get_sponsor():
+                        sponsor = Stakeholder.find(session, user_id=event.get_sponsor())
+                        if sponsor:
+                            sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
+
+                    event_data.append({
+                        'id': event.get_id(),
+                        'title': event.get_title(),
+                        'location': event.get_location(),
+                        'category': event.get_category(),
+                        'description': event.get_description(),
+                        'start': str(event.get_start()),
+                        'end': str(event.get_end()),
+                        'organizer_name': organizer_name,
+                        'sponsor_name': sponsor_name
+                    })
+
+            # ✅ Return even if empty
+            return jsonify(event_data), 200
+
+        # If user is attendee or admin, return all public events
+        public_events = Event.find(session)
+
         if public_events:
             for event in public_events:
                 organizer = Organizer.find(session, user_id=event.get_organizer())
                 organizer_name = f"{organizer.get_first_name()} {organizer.get_last_name()}"
                 sponsor_name = None
-                # Get the sponsor's name if available
+
                 if event.get_sponsor():
                     sponsor = Stakeholder.find(session, user_id=event.get_sponsor())
                     if sponsor:
                         sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
+
                 event_data.append({
-                    'id': event.get_id(),  # Add the event ID here
+                    'id': event.get_id(),
                     'title': event.get_title(),
                     'location': event.get_location(),
                     'category': event.get_category(),
                     'description': event.get_description(),
                     'start': str(event.get_start()),
                     'end': str(event.get_end()),
-                    'organizer_name': organizer_name,  # Added organizer_name
-                    'sponsor_name': sponsor_name       # Added sponsor_name
+                    'organizer_name': organizer_name,
+                    'sponsor_name': sponsor_name
                 })
-            return jsonify(event_data), 200
 
-        return jsonify({'error': 'No events found'}), 404
+        # ✅ Return 200 OK, even if event_data is an empty list
+        return jsonify(event_data), 200
+
 
 
 
@@ -351,40 +354,40 @@ def register_attendee_for_event():
 
 
 @app.route('/get_registered_events', methods=['GET'])
-@jwt_required()  # JWT is required to access this endpoint
+@jwt_required()
 def get_registered_events():
-    user_id = int(get_jwt_identity())  # Get the user ID from the JWT token
+    user_id = int(get_jwt_identity())
 
     with SQLSession() as session:
-        # Fetch all the registrations for the attendee (user_id)
         registrations = session.query(Registration).filter_by(attendee_id=user_id).all()
 
         if not registrations:
-            return {'error': 'No registered events found for this attendee'}, 404
+            # Return an empty list instead of 404
+            return jsonify([]), 200
 
         event_data = []
         for registration in registrations:
-            event = Event.find(session, event_id=registration.event_id)  # Find the event based on the registration
+            event = Event.find(session, event_id=registration.event_id)
             if event:
-                organizer = Organizer.find(session, user_id=event.get_organizer())  # Get organizer info
+                organizer = Organizer.find(session, user_id=event.get_organizer())
                 organizer_name = f"{organizer.get_first_name()} {organizer.get_last_name()}"
+
                 sponsor_name = None
-                # Get the sponsor's name if available
                 if event.get_sponsor():
                     sponsor = Stakeholder.find(session, user_id=event.get_sponsor())
                     if sponsor:
                         sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
 
                 event_data.append({
-                    'id': event.get_id(),  # Event ID
+                    'id': event.get_id(),
                     'title': event.get_title(),
                     'location': event.get_location(),
                     'category': event.get_category(),
                     'description': event.get_description(),
                     'start': str(event.get_start()),
                     'end': str(event.get_end()),
-                    'organizer_name': organizer_name,  # Organizer name
-                    'sponsor_name': sponsor_name       # Sponsor name
+                    'organizer_name': organizer_name,
+                    'sponsor_name': sponsor_name
                 })
 
         return jsonify(event_data), 200
