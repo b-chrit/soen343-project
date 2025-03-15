@@ -232,12 +232,13 @@ export default function EventsPage({ onBack }) {
         </div>
 
         <div className="flex justify-between items-center mb-4">
-          <button
-            onClick={toggleView} // Toggle view between registered and all events
-            className="bg-black text-white py-2 px-6 rounded-lg"
-          >
-            {viewingRegistrations ? "View All Events" : "View My Registrations"}
-          </button>
+        <button
+  onClick={toggleView} // Toggle view between registered and all events
+  className="bg-black text-white py-2 px-6 rounded-lg transition-all duration-300 border border-black hover:bg-white hover:text-black hover:scale-105 hover:shadow-md"
+>
+  {viewingRegistrations ? "View All Events" : "View My Registrations"}
+</button>
+
           <div className="flex items-center space-x-4">
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)} // Toggle filter menu visibility

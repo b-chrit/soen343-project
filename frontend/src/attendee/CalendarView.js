@@ -15,7 +15,7 @@ const categoryColors = {
   "Tech & Business": "bg-teal-100 text-teal-800",
 };
 
-export default function CalendarView({ onBack, onNavigateEvents, onNavigateProfile }) {
+export default function CalendarView({ onBack }) {
   const navigate = useNavigate();
   const [eventsData, setEventsData] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]); // Filtered events after applying search or filter

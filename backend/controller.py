@@ -102,9 +102,94 @@ def login():
 @app.route("/profile", methods=["GET"])
 @jwt_required()  # JWT is required to access this endpoint
 def profile():
-    # Get the user ID from the JWT token
-    user_id = int(get_jwt_identity())
-    return {'id': user_id}
+    user_id = int(get_jwt_identity())  # Get the user ID from the JWT token
+
+    with SQLSession() as session:
+        # Fetch user details from the 'User' model
+        user = User.find(session, user_id=user_id)  # Fetch data for the logged-in user
+
+        if not user:
+            return {'error': 'User not found'}, 404
+
+        # Return the user's first name, last name, email, and ID without exposing the password
+        return {
+            'id': user.get_id(),
+            'first_name': user.get_first_name(),
+            'last_name': user.get_last_name(),
+            'email': user.get_email(),
+        }, 200
+
+# ----------------------- 
+# ✅ Update Password 
+# ----------------------- 
+@app.route("/update_password", methods=["POST"])
+@jwt_required()  # JWT is required to access this endpoint
+def update_password():
+    user_id = int(get_jwt_identity())  # Get the user ID from the JWT token
+
+    data = request.get_json()
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+    confirm_password = data.get('confirm_password')
+
+    # Ensure that all fields are provided
+    if not all([current_password, new_password, confirm_password]):
+        return {'error': 'Missing fields'}, 400
+
+    # Ensure the new passwords match
+    if new_password != confirm_password:
+        return {'error': 'New passwords do not match'}, 400
+
+    with SQLSession() as session:
+        # Fetch user details from the 'User' model
+        user = User.find(session, user_id=user_id)
+
+        if not user:
+            return {'error': 'User not found'}, 404
+
+        # Verify the current password
+        if not user.check_password(current_password):
+            return {'error': 'Current password is incorrect'}, 401
+
+        # Update the password with the new one
+        user.set_password(new_password)
+        session.commit()
+
+        return {'status': 'Password updated successfully'}, 200
+
+# ----------------------- 
+# ✅ Update Profile (First Name, Last Name, Email)
+# ----------------------- 
+@app.route("/update_profile", methods=["PUT"])
+@jwt_required()  # JWT is required to access this endpoint
+def update_profile():
+    user_id = int(get_jwt_identity())  # Get the user ID from the JWT token
+
+    data = request.get_json()
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    email = data.get('email')
+
+    # Ensure that all fields are provided
+    if not all([first_name, last_name, email]):
+        return {'error': 'Missing fields'}, 400
+
+    with SQLSession() as session:
+        # Fetch user details from the 'User' model
+        user = User.find(session, user_id=user_id)
+
+        if not user:
+            return {'error': 'User not found'}, 404
+
+        # Update the profile with the new details
+        user.set_first_name(first_name)
+        user.set_last_name(last_name)
+        user.set_email(email)
+
+        session.commit()
+
+        return {'status': 'Profile updated successfully'}, 200
+
 
 # ----------------------- 
 # ✅ Get Event (For All Users)
