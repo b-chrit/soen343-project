@@ -1,46 +1,51 @@
 import { useState } from "react";
 import { CheckCircle, XCircle } from "lucide-react"; // Success icon for better feedback
 
-export default function EventModal({ event, onClose }) {
+export default function EventModal({ event, onClose, updateEvents }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false); // State for success message
+  const [isRegistered, setIsRegistered] = useState(event.isRegistered); // Use passed isRegistered value
 
-  if (!event) return null;
-
-  const registerForEvent = async () => {
+  // Register or cancel event
+  const handleRegistration = async () => {
     setIsLoading(true);
     setError(null);
     setIsSuccess(false); // Reset success message before attempting registration
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("token");
+      const url = isRegistered
+        ? "http://localhost:5003/cancel_registration_for_event"
+        : "http://localhost:5003/register_attendee_for_event";
 
-      if (!token) {
-        // Redirect to login if no token is found
-        window.location.href = "/login";
-        return;
-      }
-
-      const response = await fetch("http://localhost:5003/register_attendee_for_event", {
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          event_id: event.id,  // Send event ID for registration
-        }),
+        body: JSON.stringify({ event_id: event.id }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to register for event");
+        throw new Error(isRegistered ? "Failed to cancel registration" : "Failed to register for event");
       }
 
-      // Successfully registered
-      setIsSuccess(true);  // Show success message
+      setIsSuccess(true); // Show success message
+      setIsRegistered(!isRegistered); // Toggle registration status
 
-      // Optional: close the modal after a brief delay for the user to see the success
+      // Call updateEvents function to update the registered events list in parent
+      if (updateEvents) {
+        updateEvents(event.id, !isRegistered); // Update registration status in the parent
+      }
+
+      // Optionally close the modal after a brief delay for the user to see the success
       setTimeout(() => {
         onClose(); // Close the modal after success
       }, 2000);
@@ -50,6 +55,8 @@ export default function EventModal({ event, onClose }) {
       setIsLoading(false);
     }
   };
+
+  if (!event) return null; // Early return to prevent rendering if event is not available
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -102,11 +109,15 @@ export default function EventModal({ event, onClose }) {
         {/* Button - Initially Black, Hover to White */}
         <div className="flex justify-center mt-8">
           <button
-            onClick={registerForEvent}
+            onClick={handleRegistration}
             disabled={isLoading}
             className={`py-3 px-8 ${isLoading ? "bg-gray-300 cursor-not-allowed" : "bg-black text-white"} font-medium rounded-lg border border-black transition-all duration-300 hover:bg-white hover:text-black`}
           >
-            {isLoading ? "Registering..." : "REGISTER FOR EVENT"}
+            {isLoading
+              ? "Processing..."
+              : isRegistered
+              ? "CANCEL REGISTRATION"
+              : "REGISTER FOR EVENT"}
           </button>
         </div>
 
@@ -114,15 +125,19 @@ export default function EventModal({ event, onClose }) {
         {isSuccess && (
           <div className="mt-6 text-center text-green-600 animate__animated animate__fadeIn">
             <CheckCircle className="w-16 h-16 mx-auto text-green-600" />
-            <p className="text-xl font-semibold">Registration Successful!</p>
-            <p>Your registration for the event was completed successfully.</p>
+            <p className="text-xl font-semibold">
+              {isRegistered ? "Registration Successful!" : "Cancellation Successful!"}
+            </p>
+            <p>
+              {isRegistered
+                ? "Your registration for the event was completed successfully."
+                : "Your registration has been canceled."}
+            </p>
           </div>
         )}
 
         {/* Show Error Message */}
-        {error && (
-          <p className="text-red-500 text-center mt-4">{error}</p>
-        )}
+        {error && <p className="text-red-500 text-center mt-4">{error}</p>}
       </div>
     </div>
   );

@@ -60,6 +60,7 @@ export default function CalendarView({ onBack }) {
           const categoryColor = categoryColors[event.category] || "bg-gray-100 text-gray-800"; // Set color based on category
 
           return {
+            id: event.id,
             title: event.title,
             organizer: event.organizer_name || "N/A",
             category: event.category || "N/A",

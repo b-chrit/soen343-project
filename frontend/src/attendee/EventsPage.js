@@ -17,10 +17,10 @@ const categoryColors = {
 
 export default function EventsPage({ onBack }) {
   const navigate = useNavigate();
-  const [eventsData, setEventsData] = useState([]);
-  const [filteredEvents, setFilteredEvents] = useState([]); // Initial state for all events
-  const [registeredEvents, setRegisteredEvents] = useState([]); // State for registered events
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [eventsData, setEventsData] = useState([]); // List of all events
+  const [filteredEvents, setFilteredEvents] = useState([]); // Filtered events (for search & category filtering)
+  const [registeredEvents, setRegisteredEvents] = useState([]); // Registered events for the user
+  const [selectedEvent, setSelectedEvent] = useState(null); // Selected event for modal
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -128,12 +128,12 @@ export default function EventsPage({ onBack }) {
   // Fetch registered events for the attendee
   const fetchRegisteredEvents = async () => {
     const token = localStorage.getItem("token");
-  
+
     if (!token) {
       navigate("/login");
       return;
     }
-  
+
     try {
       const response = await fetch("http://localhost:5003/get_registered_events", {
         method: "GET",
@@ -142,21 +142,21 @@ export default function EventsPage({ onBack }) {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to fetch registered events");
       }
-  
+
       const registeredEvents = await response.json();
       console.log(`REGISTERED EVENTS:`, registeredEvents);
-  
+
       const mappedRegisteredEvents = registeredEvents.map((event) => {
         const start = event.start;
         const date = start ? start.split(" ")[0] : "N/A";
         const time = start ? start.split(" ")[1] : "N/A";
         const categoryColor =
           categoryColors[event.category] || "bg-gray-100 text-gray-800";
-  
+
         return {
           id: event.id,
           title: event.title,
@@ -175,14 +175,13 @@ export default function EventsPage({ onBack }) {
           end: event.end,
         };
       });
-  
+
       setRegisteredEvents(mappedRegisteredEvents); // Update state with mapped events
       setViewingRegistrations(true); // Change to viewing registrations
     } catch (err) {
       setError(err.message);
     }
   };
-  
 
   // Toggle between "View My Registrations" and "View All Events"
   const toggleView = () => {
@@ -210,6 +209,53 @@ export default function EventsPage({ onBack }) {
   const startIndex = (currentPage - 1) * eventsPerPage;
   const displayedEvents = filteredEvents.slice(startIndex, startIndex + eventsPerPage);
 
+  // Fetch the registration status when an event is clicked
+  const handleEventClick = async (event) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5003/check_registration?event_id=${event.id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to check registration status");
+      }
+
+      const data = await response.json();
+      const isRegistered = data.is_registered; // Assuming the response has `is_registered`
+
+      setSelectedEvent({ ...event, isRegistered }); // Pass registration status to the modal
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Update the registered events list after registration or cancellation
+  const updateEvents = (eventId, isRegistered) => {
+    if (isRegistered) {
+      // Add event to registered events if newly registered
+      const updatedRegisteredEvents = [...registeredEvents, eventsData.find(event => event.id === eventId)];
+      setRegisteredEvents(updatedRegisteredEvents);
+    } else {
+      // Remove event from registered events if canceled
+      const updatedRegisteredEvents = registeredEvents.filter(event => event.id !== eventId);
+      setRegisteredEvents(updatedRegisteredEvents);
+    }
+    
+    // Update the filtered events list
+    setFilteredEvents(registeredEvents); // Update the filtered event list
+  };
+
   return (
     <div
       className="min-h-screen bg-white flex flex-col relative"
@@ -232,12 +278,12 @@ export default function EventsPage({ onBack }) {
         </div>
 
         <div className="flex justify-between items-center mb-4">
-        <button
-  onClick={toggleView} // Toggle view between registered and all events
-  className="bg-black text-white py-2 px-6 rounded-lg transition-all duration-300 border border-black hover:bg-white hover:text-black hover:scale-105 hover:shadow-md"
->
-  {viewingRegistrations ? "View All Events" : "View My Registrations"}
-</button>
+          <button
+            onClick={toggleView} // Toggle view between registered and all events
+            className="bg-black text-white py-2 px-6 rounded-lg transition-all duration-300 border border-black hover:bg-white hover:text-black hover:scale-105 hover:shadow-md"
+          >
+            {viewingRegistrations ? "View All Events" : "View My Registrations"}
+          </button>
 
           <div className="flex items-center space-x-4">
             <button
@@ -364,7 +410,7 @@ export default function EventsPage({ onBack }) {
                       <td className="py-3 px-4">{event.sponsor}</td>
                       <td className="py-3 px-4">
                         <button
-                          onClick={() => setSelectedEvent(event)}
+                          onClick={() => handleEventClick(event)} // Updated to fetch registration status
                           className="p-2 rounded-full bg-black text-white hover:bg-gray-800 transition"
                         >
                           <Eye className="w-6 h-6" />
@@ -420,7 +466,11 @@ export default function EventsPage({ onBack }) {
       </div>
 
       {selectedEvent && (
-        <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+        <EventModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          updateEvents={updateEvents}  // Pass updateEvents to modal for instant UI update
+        />
       )}
 
       <footer className="text-sm text-gray-600 p-4 pl-6 absolute bottom-0 left-0">

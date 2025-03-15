@@ -389,6 +389,67 @@ def get_registered_events():
 
         return jsonify(event_data), 200
 
+@app.route('/cancel_registration_for_event', methods=['POST'])
+@jwt_required()
+def cancel_registration_for_event():
+    data = request.get_json()
+
+    # Check if event_id is provided
+    if 'event_id' not in data:
+        return {'error': 'Missing event_id'}, 400
+
+    event_id = data['event_id']
+
+    # Get the user (attendee) ID from the JWT
+    user_id = int(get_jwt_identity())
+
+    with SQLSession() as session:
+        # Find the attendee
+        attendee = Attendee.find(session, user_id=user_id)
+        if not attendee:
+            return {'error': 'Attendee not found'}, 404
+
+        # Find the event
+        event = Event.find(session, event_id=event_id)
+        if not event:
+            return {'error': 'Event not found'}, 404
+
+        # Find the registration to cancel
+        registration = session.query(Registration).filter_by(attendee_id=user_id, event_id=event_id).first()
+        if not registration:
+            return {'error': 'Attendee is not registered for this event'}, 404
+
+        # Cancel the registration (delete the record)
+        session.delete(registration)
+        session.commit()
+
+    return {'status': 'Registration canceled successfully'}, 200
+
+@app.route('/check_registration', methods=['GET'])
+@jwt_required()
+def check_registration():
+    user_id = get_jwt_identity()  # Get user ID from JWT token
+    event_id = request.args.get('event_id')  # Get event_id from query parameters
+
+    # Ensure event_id is provided and convert it to an integer
+    if not event_id:
+        return jsonify({"error": "Missing event_id"}), 400
+
+    try:
+        event_id = int(event_id)  # Ensure event_id is an integer
+    except ValueError:
+        return jsonify({"error": "Invalid event_id format"}), 400
+
+    # Use SQLSession to query the database
+    with SQLSession() as session:
+        # Check if the user is registered for the event
+        registration = session.query(Registration).filter_by(attendee_id=user_id, event_id=event_id).first()
+
+        if registration:
+            return jsonify({"status": "success", "is_registered": True}), 200
+        else:
+            return jsonify({"status": "success", "is_registered": False}), 200
+
 
 # -------------------------------------------------
 # ✅ Run the App
