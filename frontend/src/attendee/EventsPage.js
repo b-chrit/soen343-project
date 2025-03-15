@@ -32,6 +32,28 @@ export default function EventsPage({ onBack }) {
   const [selectedTime, setSelectedTime] = useState("");
   const [viewingRegistrations, setViewingRegistrations] = useState(false); // Track view state
   const searchRef = useRef(null);
+  const resetFilters = () => {
+    setSelectedCategory("");  // Reset category filter
+    setSelectedDate("");      // Reset date filter
+    setSelectedTime("");      // Reset time filter
+    setSearchQuery("");       // Reset search query
+    setFilteredEvents(eventsData);  // Reset filtered events to all events
+  };
+  const filterRef = useRef(null); 
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setIsFilterOpen(false); // Close the filter modal
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Fetch events from backend on mount
   useEffect(() => {
@@ -319,61 +341,75 @@ export default function EventsPage({ onBack }) {
 
         {/* Filter Menu */}
         {isFilterOpen && (
-          <div className="bg-white shadow-md p-4 rounded-lg absolute top-20 left-1/2 transform -translate-x-1/2 w-80 z-10">
-            <div className="mb-4">
-              <label
-                htmlFor="category"
-                className="block text-sm font-semibold text-gray-700"
-              >
-                Category
-              </label>
-              <input
-                id="category"
-                type="text"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                placeholder="Filter by category"
-                className="w-full mt-2 p-2 border border-gray-300 rounded"
-              />
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="date"
-                className="block text-sm font-semibold text-gray-700"
-              >
-                Date
-              </label>
-              <input
-                id="date"
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full mt-2 p-2 border border-gray-300 rounded"
-              />
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="time"
-                className="block text-sm font-semibold text-gray-700"
-              >
-                Time
-              </label>
-              <input
-                id="time"
-                type="time"
-                value={selectedTime}
-                onChange={(e) => setSelectedTime(e.target.value)}
-                className="w-full mt-2 p-2 border border-gray-300 rounded"
-              />
-            </div>
-            <button
-              onClick={() => setIsFilterOpen(false)}
-              className="bg-black text-white py-2 px-6 rounded-lg mt-4"
-            >
-              Apply Filters
-            </button>
-          </div>
-        )}
+  <div ref={filterRef} className="bg-white shadow-md p-4 rounded-lg absolute top-20 left-1/2 transform -translate-x-1/2 w-80 z-10">
+    <div className="mb-4">
+      <label
+        htmlFor="category"
+        className="block text-sm font-semibold text-gray-700"
+      >
+        Category
+      </label>
+      <input
+        id="category"
+        type="text"
+        value={selectedCategory}
+        onChange={(e) => setSelectedCategory(e.target.value)}
+        placeholder="Filter by category"
+        className="w-full mt-2 p-2 border border-gray-300 rounded"
+      />
+    </div>
+    <div className="mb-4">
+      <label
+        htmlFor="date"
+        className="block text-sm font-semibold text-gray-700"
+      >
+        Date
+      </label>
+      <input
+        id="date"
+        type="date"
+        value={selectedDate}
+        onChange={(e) => setSelectedDate(e.target.value)}
+        className="w-full mt-2 p-2 border border-gray-300 rounded"
+      />
+    </div>
+    <div className="mb-4">
+      <label
+        htmlFor="time"
+        className="block text-sm font-semibold text-gray-700"
+      >
+        Time
+      </label>
+      <input
+        id="time"
+        type="time"
+        value={selectedTime}
+        onChange={(e) => setSelectedTime(e.target.value)}
+        className="w-full mt-2 p-2 border border-gray-300 rounded"
+      />
+    </div>
+
+    {/* Flex container for the buttons */}
+    <div className="flex space-x-2 mt-4">
+      {/* Apply Filters Button */}
+      <button
+        onClick={() => setIsFilterOpen(false)}
+        className="bg-black text-white py-2 px-6 rounded-lg w-full transition-all duration-300 ease-in-out transform hover:bg-white hover:text-black hover:scale-105 hover:shadow-lg"
+      >
+        Apply Filters
+      </button>
+
+      {/* Reset Filters Button */}
+      <button
+        onClick={resetFilters}
+        className="bg-red-500 text-white py-2 px-6 rounded-lg w-full transition-all duration-300 ease-in-out transform hover:bg-white hover:text-red-500 hover:scale-105 hover:shadow-lg"
+      >
+        Reset Filters
+      </button>
+    </div>
+  </div>
+)}
+
 
         {loading && <p>Loading events...</p>}
         {error && <p className="text-red-500">{error}</p>}
