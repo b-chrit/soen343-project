@@ -211,21 +211,19 @@ export default function ProfilePage({ onBack }) {
                 key !== "confirmPassword"
               ) {
                 return (
-                  <div key={key} className="flex flex-col w-full">
-                  <label className="text-sm text-gray-700">
-                    {key.replace("_", " ").toUpperCase()}
-                  </label>
-                  <input
-                    type="text"
-                    name={key}
-                    value={formData[key]}
-                    onChange={handleChange}
-                    className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg"
-                    readOnly={!isEditing}
-                    style={key === "email" ? { width: '100%' } : {}}
-                  />
-                </div>
-                
+                  <div key={key} className={`flex flex-col ${key === "email" ? "col-span-2" : ""}`}>
+                    <label className="text-sm text-gray-700">
+                      {key.replace("_", " ").toUpperCase()}
+                    </label>
+                    <input
+                      type="text"
+                      name={key}
+                      value={formData[key]}
+                      onChange={handleChange}
+                      className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg"
+                      readOnly={!isEditing}
+                    />
+                  </div>
                 );
               }
             })}
