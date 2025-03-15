@@ -1,78 +1,139 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './App.css'; 
+import logo from './logo.jpg'; // Assuming you have the logo here!
 
-function Login() {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [guestMessage, setGuestMessage] = useState('');  // State for guest message
+  const [guestMessage, setGuestMessage] = useState('');
+  const [apiError, setApiError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    console.log('User Logged In:', { email, password });
-    
+
+    // Check if email and password are provided
+    if (!email || !password) {
+      setApiError('Please provide both email and password.');
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5003/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Save token to local storage for authentication
+        localStorage.setItem("token", result.token);
+        navigate("/dashboard"); // Redirect to the dashboard after successful login
+      } else {
+        const result = await response.json();
+        setApiError(result.error || "Login failed. Please try again.");
+      }
+    } catch (error) {
+      setApiError("Something went wrong. Please try again later.");
+    }
   };
 
   const handleGuestLogin = () => {
-    setGuestMessage('You are continuing as a guest');  // Set message when guest logs in
-
+    setGuestMessage('You are continuing as a guest');
+    navigate("/events");
   };
 
   return (
-    <div className="register-container">
-      {/* Left Half - Background Image */}
-      <div className="register-image">
-        <div className="register-title"></div>
+    <div className="flex h-screen font-sans">
+      {/* Left Side - Logo */}
+      <div className="w-1/2 h-screen relative">
+        <img
+          src={logo}
+          alt="Logo"
+          className="object-cover w-full h-full"
+        />
+        <h1 className="absolute top-8 left-8 text-white text-4xl font-extrabold drop-shadow-lg">
+          SEES
+        </h1>
       </div>
 
-      {/* Right Half - Login Box */}
-      <div className="register-box">
-        <h2>LOGIN</h2>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label>Username</label>
-            <input
-              type="email"
-              placeholder="USERNAME"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="form-control"
-            />
-          </div>
-          <div>
-            <label>Password</label>
-            <input
-              type="password"
-              placeholder="PASSWORD"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="form-control"
-            />
-          </div>
-          <div className="button-container">
-            <button type="submit" className="btn-dark">LOGIN</button>
-            <p>NOT A MEMBER? <a href="/register" className="fw-bold">REGISTER NOW</a></p>
-          </div>
-        </form>
-
-        {/* Continue as Guest Button */}
-        <button onClick={handleGuestLogin} className="btn-outline-dark">
-          CONTINUE AS A GUEST
-        </button>
-
-        {/* Guest message */}
-        {guestMessage && (
-          <p className="guest-message">
-            {guestMessage}
+      {/* Right Side - Login Form */}
+      <div className="w-1/2 flex flex-col justify-center items-center bg-white px-12">
+        <div className="w-full max-w-md text-center">
+          <h2 className="text-4xl font-extrabold mb-6">WELCOME BACK!</h2>
+          <p className="text-sm text-gray-700 mb-12 leading-relaxed">
+            Login to manage events, view schedules, and explore educational experiences with SEES.
           </p>
-        )}
+
+          {/* Error message */}
+          {apiError && <p className="text-red-500 text-xs font-medium">{apiError}</p>}
+
+          <form onSubmit={handleSubmit} className="space-y-8 text-left">
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-bold uppercase mb-2">Email</label>
+              <input
+                type="email"
+                placeholder="EMAIL"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-black text-xs uppercase placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black"
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-xs font-bold uppercase mb-2">Password</label>
+              <input
+                type="password"
+                placeholder="PASSWORD"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-black text-xs uppercase placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black"
+              />
+            </div>
+
+            {/* Login Button */}
+            <button
+              type="submit"
+              className="w-full py-3 mt-4 bg-black text-white text-sm font-bold uppercase tracking-wider transition-all duration-300 border border-black rounded-md
+                         hover:bg-white hover:text-black hover:scale-105 hover:shadow-md"
+            >
+              LOGIN
+            </button>
+          </form>
+
+          {/* Continue as Guest */}
+          <button
+            onClick={handleGuestLogin}
+            className="w-full py-3 mt-4 bg-white text-black text-sm font-bold uppercase tracking-wider border border-black transition-all duration-300 rounded-md
+                       hover:bg-black hover:text-white hover:scale-105 hover:shadow-md"
+          >
+            CONTINUE AS GUEST
+          </button>
+
+          {/* Guest Message */}
+          {guestMessage && (
+            <p className="text-xs mt-4 text-green-600">{guestMessage}</p>
+          )}
+
+          {/* Register Link */}
+          <p className="mt-8 text-xs text-black">
+            NOT A MEMBER?{" "}
+            <span
+              onClick={() => navigate("/register")}
+              className="font-bold cursor-pointer"
+            >
+              REGISTER NOW
+            </span>
+          </p>
+        </div>
       </div>
     </div>
   );
-}
+};
 
 export default Login;
