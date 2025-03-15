@@ -10,7 +10,7 @@ export default function SearchAndFilter({
   setSelectedDate,
   selectedTime,
   setSelectedTime,
-  resetFilters
+  resetFilters,
 }) {
   const searchRef = useRef(null);
   const filterRef = useRef(null);
@@ -18,7 +18,7 @@ export default function SearchAndFilter({
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Close filter when clicking outside
+  // Close filter and search when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (filterRef.current && !filterRef.current.contains(event.target)) {
@@ -40,11 +40,12 @@ export default function SearchAndFilter({
   };
 
   return (
-    <div className="flex items-center space-x-4">
+    <div className="flex items-center space-x-4 relative">
       {/* Filter Button */}
       <button
         onClick={() => setIsFilterOpen(!isFilterOpen)}
-        className="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg flex items-center space-x-2"
+        className="flex items-center space-x-2 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-all duration-300 ease-in-out 
+        hover:bg-gray-300 hover:text-black hover:scale-105 hover:shadow-md focus:outline-none active:scale-95"
       >
         <Filter className="w-4 h-4" />
         <span>Filter</span>
@@ -57,15 +58,16 @@ export default function SearchAndFilter({
             type="text"
             autoFocus
             placeholder="Search"
-            className="border border-gray-300 py-2 px-4 rounded-lg"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
+            className="border border-gray-300 py-2 px-4 rounded-lg w-64 transition-all duration-300 ease-in-out focus:ring-2 focus:ring-black focus:outline-none"
           />
         ) : (
           <button
             onClick={() => setIsSearchActive(true)}
-            className="bg-gray-300 text-gray-700 py-2 px-4 rounded-lg flex items-center space-x-2"
+            className="flex items-center space-x-2 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg transition-all duration-300 ease-in-out
+            hover:bg-gray-400 hover:text-black hover:scale-105 hover:shadow-md focus:outline-none active:scale-95"
           >
             <span>Search</span>
             <Search className="w-4 h-4" />
@@ -77,10 +79,10 @@ export default function SearchAndFilter({
       {isFilterOpen && (
         <div
           ref={filterRef}
-          className="bg-white shadow-md p-4 rounded-lg absolute top-20 left-1/2 transform -translate-x-1/2 w-80 z-10"
+          className="bg-white shadow-2xl p-6 rounded-2xl absolute top-20 left-1/2 transform -translate-x-1/2 w-80 z-10 transition-all duration-300 ease-in-out"
         >
           <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
               Category
             </label>
             <input
@@ -88,46 +90,49 @@ export default function SearchAndFilter({
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               placeholder="Filter by category"
-              className="w-full mt-2 p-2 border border-gray-300 rounded"
+              className="w-full mt-2 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:outline-none transition-all duration-200"
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
               Date
             </label>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full mt-2 p-2 border border-gray-300 rounded"
+              className="w-full mt-2 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:outline-none transition-all duration-200"
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
               Time
             </label>
             <input
               type="time"
               value={selectedTime}
               onChange={(e) => setSelectedTime(e.target.value)}
-              className="w-full mt-2 p-2 border border-gray-300 rounded"
+              className="w-full mt-2 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:outline-none transition-all duration-200"
             />
           </div>
 
-          <div className="flex space-x-2 mt-4">
+          <div className="flex space-x-2 mt-6">
             <button
               onClick={() => setIsFilterOpen(false)}
-              className="bg-black text-white py-2 px-6 rounded-lg w-full transition-all duration-300 ease-in-out transform hover:bg-white hover:text-black hover:scale-105 hover:shadow-lg"
+              className="bg-black text-white py-2 px-6 rounded-lg w-full transition-all duration-300 ease-in-out
+              hover:bg-white hover:text-black hover:scale-105 hover:shadow-lg active:scale-95"
             >
-              Apply Filters
+              Apply
             </button>
+
             <button
               onClick={resetFilters}
-              className="bg-red-500 text-white py-2 px-6 rounded-lg w-full transition-all duration-300 ease-in-out transform hover:bg-white hover:text-red-500 hover:scale-105 hover:shadow-lg"
+              className="bg-red-500 text-white py-2 px-6 rounded-lg w-full transition-all duration-300 ease-in-out
+              hover:bg-white hover:text-red-500 hover:scale-105 hover:shadow-lg active:scale-95"
             >
-              Reset Filters
+              Reset
             </button>
           </div>
         </div>
