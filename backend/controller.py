@@ -261,9 +261,6 @@ def get_event():
         # ✅ Return 200 OK, even if event_data is an empty list
         return jsonify(event_data), 200
 
-
-
-
 # ----------------------- 
 # ✅ Create Event (Organizer Only)
 # ----------------------- 
