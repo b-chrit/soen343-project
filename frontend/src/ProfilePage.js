@@ -14,6 +14,11 @@ export default function ProfilePage({ onBack }) {
     newPassword: "",
     confirmPassword: "",
   });
+  const [initialFormData, setInitialFormData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+  });
 
   // States for password visibility toggles
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -50,6 +55,13 @@ export default function ProfilePage({ onBack }) {
 
         const userData = await response.json();
 
+        // Store the initial form data separately
+        setInitialFormData({
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          email: userData.email,
+        });
+
         setFormData({
           first_name: userData.first_name,
           last_name: userData.last_name,
@@ -71,7 +83,11 @@ export default function ProfilePage({ onBack }) {
   };
 
   const handleEditClick = () => setIsEditing(true);
-  const handleCancelClick = () => setIsEditing(false);
+  const handleCancelClick = () => {
+    // Reset the form data to the initial values
+    setFormData(initialFormData);
+    setIsEditing(false);
+  };
   
   const handleProfileUpdate = async () => {
     console.log("Changes confirmed:", formData);
