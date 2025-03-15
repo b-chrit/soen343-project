@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
 import EventModal from "../EventModal";
 import HeaderBar from "../HeaderBar";
-import SearchAndFilter from "./SearchAndFilter";
-import EventsTable from "./EventsTable";
+import SearchAndFilter from "../SearchAndFilter";
+import EventsTable from "../EventsTable";
 import { useNavigate } from "react-router-dom";
 
 const eventsPerPage = 5;
