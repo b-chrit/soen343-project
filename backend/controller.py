@@ -1,3 +1,4 @@
+from models import Registration
 from flask import Flask, request, jsonify  # Import required modules
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS  # To enable Cross-Origin Resource Sharing (CORS)
@@ -134,6 +135,7 @@ def get_event():
                             if sponsor:
                                 sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
                         event_data.append({
+                            'id': event.get_id(),  # Add the event ID here
                             'title': event.get_title(),
                             'location': event.get_location(),
                             'category': event.get_category(),
@@ -158,6 +160,7 @@ def get_event():
                     if sponsor:
                         sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
                 event_data.append({
+                    'id': event.get_id(),  # Add the event ID here
                     'title': event.get_title(),
                     'location': event.get_location(),
                     'category': event.get_category(),
@@ -170,6 +173,7 @@ def get_event():
             return jsonify(event_data), 200
 
         return jsonify({'error': 'No events found'}), 404
+
 
 
 # ----------------------- 
@@ -221,6 +225,85 @@ def create_event():
                 return {'status': 'success'}, 201
             return {'error': 'Forbidden'}, 403
         return {'error': 'Not Authenticated'}, 401
+    
+
+@app.route('/register_attendee_for_event', methods=['POST'])
+@jwt_required()
+def register_attendee_for_event():
+    data = request.get_json()
+
+    # Check if event_id is provided
+    if 'event_id' not in data:
+        return {'error': 'Missing event_id'}, 400
+
+    event_id = data['event_id']
+
+    # Get the user (attendee) ID from the JWT
+    user_id = int(get_jwt_identity())
+
+    with SQLSession() as session:
+        # Find the attendee
+        attendee = Attendee.find(session, user_id=user_id)
+        if not attendee:
+            return {'error': 'Attendee not found'}, 404
+
+        # Find the event
+        event = Event.find(session, event_id=event_id)
+        if not event:
+            return {'error': 'Event not found'}, 404
+
+        # Check if the attendee is already registered for this event
+        registration = session.query(Registration).filter_by(attendee_id=user_id, event_id=event_id).first()
+        if registration:
+            return {'error': 'Attendee already registered for this event'}, 409
+
+        # Register the attendee for the event
+        registration = Registration(attendee_id=user_id, event_id=event_id)
+        session.add(registration)
+        session.commit()
+
+    return {'status': 'Registration successful'}, 201
+
+
+@app.route('/get_registered_events', methods=['GET'])
+@jwt_required()  # JWT is required to access this endpoint
+def get_registered_events():
+    user_id = int(get_jwt_identity())  # Get the user ID from the JWT token
+
+    with SQLSession() as session:
+        # Fetch all the registrations for the attendee (user_id)
+        registrations = session.query(Registration).filter_by(attendee_id=user_id).all()
+
+        if not registrations:
+            return {'error': 'No registered events found for this attendee'}, 404
+
+        event_data = []
+        for registration in registrations:
+            event = Event.find(session, event_id=registration.event_id)  # Find the event based on the registration
+            if event:
+                organizer = Organizer.find(session, user_id=event.get_organizer())  # Get organizer info
+                organizer_name = f"{organizer.get_first_name()} {organizer.get_last_name()}"
+                sponsor_name = None
+                # Get the sponsor's name if available
+                if event.get_sponsor():
+                    sponsor = Stakeholder.find(session, user_id=event.get_sponsor())
+                    if sponsor:
+                        sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
+
+                event_data.append({
+                    'id': event.get_id(),  # Event ID
+                    'title': event.get_title(),
+                    'location': event.get_location(),
+                    'category': event.get_category(),
+                    'description': event.get_description(),
+                    'start': str(event.get_start()),
+                    'end': str(event.get_end()),
+                    'organizer_name': organizer_name,  # Organizer name
+                    'sponsor_name': sponsor_name       # Sponsor name
+                })
+
+        return jsonify(event_data), 200
+
 
 # -------------------------------------------------
 # ✅ Run the App

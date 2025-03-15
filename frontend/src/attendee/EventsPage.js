@@ -18,17 +18,19 @@ const categoryColors = {
 export default function EventsPage({ onBack }) {
   const navigate = useNavigate();
   const [eventsData, setEventsData] = useState([]);
-  const [filteredEvents, setFilteredEvents] = useState([]); // New state for filtered events
+  const [filteredEvents, setFilteredEvents] = useState([]); // Initial state for all events
+  const [registeredEvents, setRegisteredEvents] = useState([]); // State for registered events
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(""); // New state for search query
+  const [searchQuery, setSearchQuery] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isFilterOpen, setIsFilterOpen] = useState(false); // Filter visibility
-  const [selectedCategory, setSelectedCategory] = useState(""); // Category filter
-  const [selectedDate, setSelectedDate] = useState(""); // Date filter
-  const [selectedTime, setSelectedTime] = useState(""); // Time filter
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
+  const [viewingRegistrations, setViewingRegistrations] = useState(false); // Track view state
   const searchRef = useRef(null);
 
   // Fetch events from backend on mount
@@ -36,7 +38,6 @@ export default function EventsPage({ onBack }) {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-
         const token = localStorage.getItem("token");
 
         if (!token) {
@@ -57,16 +58,17 @@ export default function EventsPage({ onBack }) {
         }
 
         const data = await response.json();
-        console.log("Event Data:", data); // Check the actual structure of the data
+        console.log("Event Data:", data);
 
-        // Map API data to match table fields
         const mappedEvents = data.map((event) => {
           const start = event.start;
           const date = start ? start.split(" ")[0] : "N/A";
           const time = start ? start.split(" ")[1] : "N/A";
-          const categoryColor = categoryColors[event.category] || "bg-gray-100 text-gray-800"; // Set color based on category
+          const categoryColor =
+            categoryColors[event.category] || "bg-gray-100 text-gray-800";
 
           return {
+            id: event.id,
             title: event.title,
             organizer: event.organizer_name || "N/A",
             category: event.category || "N/A",
@@ -85,7 +87,7 @@ export default function EventsPage({ onBack }) {
         });
 
         setEventsData(mappedEvents);
-        setFilteredEvents(mappedEvents); // Initially set filteredEvents to all events
+        setFilteredEvents(mappedEvents); // Initialize the filtered events to all events
       } catch (err) {
         setError(err.message);
       } finally {
@@ -98,14 +100,14 @@ export default function EventsPage({ onBack }) {
 
   // Search function to filter events
   useEffect(() => {
-    let filtered = eventsData.filter((event) =>
-      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.organizer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.sponsor_name.toLowerCase().includes(searchQuery.toLowerCase())
+    let filtered = (viewingRegistrations ? registeredEvents : eventsData).filter(
+      (event) =>
+        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.organizer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.sponsor_name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // Apply additional filter by category, date, and time
     if (selectedCategory) {
       filtered = filtered.filter((event) =>
         event.category.toLowerCase().includes(selectedCategory.toLowerCase())
@@ -121,7 +123,76 @@ export default function EventsPage({ onBack }) {
     }
 
     setFilteredEvents(filtered);
-  }, [searchQuery, eventsData, selectedCategory, selectedDate, selectedTime]);
+  }, [searchQuery, eventsData, selectedCategory, selectedDate, selectedTime, registeredEvents, viewingRegistrations]);
+
+  // Fetch registered events for the attendee
+  const fetchRegisteredEvents = async () => {
+    const token = localStorage.getItem("token");
+  
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+  
+    try {
+      const response = await fetch("http://localhost:5003/get_registered_events", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch registered events");
+      }
+  
+      const registeredEvents = await response.json();
+      console.log(`REGISTERED EVENTS:`, registeredEvents);
+  
+      const mappedRegisteredEvents = registeredEvents.map((event) => {
+        const start = event.start;
+        const date = start ? start.split(" ")[0] : "N/A";
+        const time = start ? start.split(" ")[1] : "N/A";
+        const categoryColor =
+          categoryColors[event.category] || "bg-gray-100 text-gray-800";
+  
+        return {
+          id: event.id,
+          title: event.title,
+          organizer: event.organizer_name || "N/A",
+          category: event.category || "N/A",
+          categoryColor: categoryColor,
+          date: date,
+          time: time,
+          sponsored: event.sponsor_name ? "Yes" : "No",
+          sponsor: event.sponsor_name || "N/A",
+          organizer_name: event.organizer_name,
+          sponsor_name: event.sponsor_name,
+          description: event.description,
+          location: event.location,
+          start: event.start,
+          end: event.end,
+        };
+      });
+  
+      setRegisteredEvents(mappedRegisteredEvents); // Update state with mapped events
+      setViewingRegistrations(true); // Change to viewing registrations
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+  
+
+  // Toggle between "View My Registrations" and "View All Events"
+  const toggleView = () => {
+    if (!viewingRegistrations) {
+      fetchRegisteredEvents(); // Fetch registered events when switching to "My Registrations"
+    } else {
+      setFilteredEvents(eventsData); // Reset to all events when viewing registrations
+    }
+    setViewingRegistrations(!viewingRegistrations);
+  };
 
   const handleClickOutside = (event) => {
     if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -140,15 +211,15 @@ export default function EventsPage({ onBack }) {
   const displayedEvents = filteredEvents.slice(startIndex, startIndex + eventsPerPage);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col relative" onClick={handleClickOutside}>
+    <div
+      className="min-h-screen bg-white flex flex-col relative"
+      onClick={handleClickOutside}
+    >
       <HeaderBar
-        menuOptions={[
-          { label: "EVENTS", onClick: () => navigate("/events") },
-          { label: "PROFILE", onClick: () => navigate("/profile") },
-          { label: "LOGOUT", onClick: () => {
-            localStorage.removeItem("token");
-            navigate("/login");
-          }},
+        menuOptions={[ 
+          { label: "EVENTS", onClick: () => navigate("/events") }, 
+          { label: "PROFILE", onClick: () => navigate("/profile") }, 
+          { label: "LOGOUT", onClick: () => { localStorage.removeItem("token"); navigate("/login"); } }
         ]}
       />
 
@@ -161,8 +232,11 @@ export default function EventsPage({ onBack }) {
         </div>
 
         <div className="flex justify-between items-center mb-4">
-          <button className="bg-black text-white py-2 px-6 rounded-lg">
-            View My Registrations
+          <button
+            onClick={toggleView} // Toggle view between registered and all events
+            className="bg-black text-white py-2 px-6 rounded-lg"
+          >
+            {viewingRegistrations ? "View All Events" : "View My Registrations"}
           </button>
           <div className="flex items-center space-x-4">
             <button
@@ -200,7 +274,12 @@ export default function EventsPage({ onBack }) {
         {isFilterOpen && (
           <div className="bg-white shadow-md p-4 rounded-lg absolute top-20 left-1/2 transform -translate-x-1/2 w-80 z-10">
             <div className="mb-4">
-              <label htmlFor="category" className="block text-sm font-semibold text-gray-700">Category</label>
+              <label
+                htmlFor="category"
+                className="block text-sm font-semibold text-gray-700"
+              >
+                Category
+              </label>
               <input
                 id="category"
                 type="text"
@@ -211,7 +290,12 @@ export default function EventsPage({ onBack }) {
               />
             </div>
             <div className="mb-4">
-              <label htmlFor="date" className="block text-sm font-semibold text-gray-700">Date</label>
+              <label
+                htmlFor="date"
+                className="block text-sm font-semibold text-gray-700"
+              >
+                Date
+              </label>
               <input
                 id="date"
                 type="date"
@@ -221,7 +305,12 @@ export default function EventsPage({ onBack }) {
               />
             </div>
             <div className="mb-4">
-              <label htmlFor="time" className="block text-sm font-semibold text-gray-700">Time</label>
+              <label
+                htmlFor="time"
+                className="block text-sm font-semibold text-gray-700"
+              >
+                Time
+              </label>
               <input
                 id="time"
                 type="time"
@@ -289,7 +378,11 @@ export default function EventsPage({ onBack }) {
             <div className="flex justify-start items-center mt-6 space-x-2">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                className={`py-2 px-4 rounded-lg ${currentPage === 1 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"}`}
+                className={`py-2 px-4 rounded-lg ${
+                  currentPage === 1
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-300 text-gray-700"
+                }`}
                 disabled={currentPage === 1}
               >
                 Previous
@@ -299,15 +392,23 @@ export default function EventsPage({ onBack }) {
                   <button
                     key={num}
                     onClick={() => setCurrentPage(num)}
-                    className={`py-2 px-4 rounded-lg ${num === currentPage ? "bg-black text-white" : "bg-gray-300 text-gray-700"}`}
+                    className={`py-2 px-4 rounded-lg ${
+                      num === currentPage ? "bg-black text-white" : "bg-gray-300 text-gray-700"
+                    }`}
                   >
                     {num}
                   </button>
                 ))}
               </div>
               <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                className={`py-2 px-4 rounded-lg ${currentPage === totalPages ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"}`}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                className={`py-2 px-4 rounded-lg ${
+                  currentPage === totalPages
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-300 text-gray-700"
+                }`}
                 disabled={currentPage === totalPages}
               >
                 Next
