@@ -183,7 +183,6 @@ export default function EventsPage({ onBack }) {
     }
   };
 
-  // Toggle between "View My Registrations" and "View All Events"
   const toggleView = () => {
     if (!viewingRegistrations) {
       fetchRegisteredEvents(); // Fetch registered events when switching to "My Registrations"
@@ -192,6 +191,7 @@ export default function EventsPage({ onBack }) {
     }
     setViewingRegistrations(!viewingRegistrations);
   };
+  
 
   const handleClickOutside = (event) => {
     if (searchRef.current && !searchRef.current.contains(event.target)) {
