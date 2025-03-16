@@ -13,6 +13,8 @@ const Register = () => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [organizationName, setOrganizationName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [apiError, setApiError] = useState("");
 
   const navigate = useNavigate();
@@ -41,21 +43,30 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    if (role !== "Attendee") {
-      setApiError("Currently, registration is only available for Attendees.");
-      return;
-    }
-
     try {
-      const response = await fetch("http://localhost:5003/register_attendee", {
+      // Build the payload dynamically
+      const payload = {
+        email,
+        password,
+        first_name: firstName,
+        last_name: lastName,
+        user_type: role.toLowerCase(), // Normalize role to match backend expectations
+      };
+
+      // If the user is an Organizer, include additional fields
+      if (role === "Organizer") {
+        if (!organizationName || !phoneNumber) {
+          setApiError("Organization name and phone number are required for organizers.");
+          return;
+        }
+        payload.organization_name = organizationName;
+        payload.phone_number = phoneNumber;
+      }
+      console.log("Payload: " + payload.user_type)
+      const response = await fetch("http://localhost:5003/register_user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          first_name: firstName,
-          last_name: lastName,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -223,6 +234,37 @@ const Register = () => {
                   className="w-full px-4 py-3 border border-black text-xs uppercase placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
+
+              {/* Organizer fields */}
+              {role === "Organizer" && (
+                <>
+                  {/* Organization Name */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold uppercase">Organization Name</label>
+                    <input
+                      type="text"
+                      placeholder="ORGANIZATION NAME"
+                      value={organizationName}
+                      onChange={(e) => setOrganizationName(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 border border-black text-xs uppercase placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black"
+                    />
+                  </div>
+
+                  {/* Phone Number */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold uppercase">Phone Number</label>
+                    <input
+                      type="text"
+                      placeholder="PHONE NUMBER"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 border border-black text-xs uppercase placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black"
+                    />
+                  </div>
+                </>
+              )}
 
               {/* CONTINUE Button */}
               <button
