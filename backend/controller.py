@@ -304,6 +304,134 @@ def get_registered_events():
 
         return jsonify(event_data), 200
 
+# ----------------------- 
+# ✅ Delete User Endpoint (Admin Only)
+# -----------------------
+# Deletes a user account by user_id.
+# Requires: Admin JWT token in Authorization header.
+# Method: DELETE
+# Route: /delete_user
+# Request body: { "user_id": int }
+# Response: 200 on success, 403 if unauthorized, 404 if user not found.
+@app.route("/delete_user", methods=["DELETE"])
+@jwt_required()  # JWT is required (Admin access only)
+def delete_user():
+    # Get the ID of the user making the request (should be admin)
+    admin_id = int(get_jwt_identity())
+
+    # Get the request body data
+    data = request.get_json()
+
+    # ✅ Ensure user_id is provided in the request
+    if not data or 'user_id' not in data:
+        return {'error': 'Missing user_id'}, 400
+
+    user_to_delete_id = data['user_id']
+
+    with SQLSession() as session:
+        # ✅ Verify the requester is an admin
+        admin = User.find(session, user_id=admin_id)
+        if not admin or admin.get_type() != 'admin':
+            return {'error': 'Access denied'}, 403
+
+        # ✅ Find the user to delete by user_id
+        user_to_delete = User.find(session, user_id=user_to_delete_id)
+        if not user_to_delete:
+            return {'error': 'User not found'}, 404
+
+        # ✅ Optional: Prevent the admin from deleting their own account
+        if user_to_delete.get_id() == admin_id:
+            return {'error': 'Admins cannot delete themselves'}, 400
+
+        # ✅ Delete the user account
+        session.delete(user_to_delete)
+        session.commit()
+
+        return {'status': 'User deleted successfully'}, 200
+
+    
+
+# -----------------------
+# ✅ Get All Users Endpoint
+# -----------------------
+# Returns all users except admins.
+# Requires: Admin JWT token in Authorization header.
+# Method: GET
+# Route: /get_all_users
+# Response: 200 with user list, 403 if not admin.
+@app.route("/get_all_users", methods=["GET"])
+@jwt_required()  # Ensure only authenticated users can access
+def get_all_users():
+    user_id = int(get_jwt_identity())
+
+    with SQLSession() as session:
+        # Check if the requester is an admin
+        admin = User.find(session, user_id=user_id)
+        if not admin or admin.get_type() != 'admin':
+            return {'error': 'Access denied'}, 403
+
+        # Fetch all users
+        users = User.find(session)
+
+        user_data = []
+        for user in users:
+            if user.get_type() == 'admin':  # ✅ Skip admins
+                continue
+            user_data.append({
+                'id': user.get_id(),
+                'first_name': user.get_first_name(),
+                'last_name': user.get_last_name(),
+                'email': user.get_email(),
+                'type': user.get_type()
+            })
+
+        return jsonify(user_data), 200
+    
+# -----------------------
+# ✅ Delete Event Endpoint
+# -----------------------
+# Deletes an event by event_id.
+# Requires: JWT token (Organizer or Admin).
+# Method: DELETE
+# Route: /delete_event
+# Request body: { "event_id": int }
+# Response: 200 on success, 403 if unauthorized, 404 if not found.
+@app.route("/delete_event", methods=["DELETE"])
+@jwt_required()  # JWT is required to delete events
+def delete_event():
+    user_id = int(get_jwt_identity())
+
+    data = request.get_json()
+    
+    # Ensure event_id is provided in the request body
+    if not data or 'event_id' not in data:
+        return {'error': 'Missing event_id'}, 400
+
+    event_id = data['event_id']
+
+    with SQLSession() as session:
+        # Find the event by event_id
+        event = Event.find(session, event_id=event_id)
+        if not event:
+            return {'error': 'Event not found'}, 404
+
+        # Get the requesting user
+        user = User.find(session, user_id=user_id)
+        if not user:
+            return {'error': 'User not found'}, 404
+
+        # ✅ Check if the user is authorized to delete the event
+        is_admin = user.get_type() == 'admin'
+        is_organizer_and_owner = user.get_type() == 'organizer' and event.get_organizer() == user_id
+
+        if not is_admin and not is_organizer_and_owner:
+            return {'error': 'Unauthorized to delete this event'}, 403
+
+        # ✅ Delete the event
+        session.delete(event)
+        session.commit()
+
+    return {'status': 'Event deleted successfully'}, 200
 
 # -------------------------------------------------
 # ✅ Run the App
