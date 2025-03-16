@@ -106,13 +106,13 @@ export default function EventDashboard() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* REUSABLE HEADER WITH MENU OPTIONS */}
-      <HeaderBar
-        menuOptions={[
-          { label: "EVENTS", onClick: () => navigate("/events") },
-          { label: "PROFILE", onClick: () => navigate("/profile") },
-          { label: "LOGOUT", onClick: () => console.log("Logging Out") },
-        ]}
-      />
+       <HeaderBar
+         menuOptions={[ 
+           { label: "EVENTS", onClick: () => navigate("/events") }, 
+           { label: "PROFILE", onClick: () => navigate("/profile") }, 
+           { label: "LOGOUT", onClick: () => { localStorage.removeItem("token"); navigate("/login"); } }
+         ]}
+       />
 
       {/* MAIN CONTENT */}
       <div className="flex flex-grow items-center justify-center px-20 py-12">
@@ -171,12 +171,13 @@ export default function EventDashboard() {
             </div>
 
             <div className="mt-8">
-              <button
-                className="bg-black text-white py-2 px-8 rounded-lg"
-                onClick={() => navigate("/calendar")}
-              >
-                View Events Calendar
-              </button>
+            <button
+  className="bg-black text-white py-2 px-8 rounded-lg transition-all duration-300 border border-black hover:bg-white hover:text-black hover:scale-105 hover:shadow-md"
+  onClick={() => navigate("/calendar")}
+>
+  View Events Calendar
+</button>
+
             </div>
           </div>
         </div>

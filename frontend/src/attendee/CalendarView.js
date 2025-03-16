@@ -15,17 +15,16 @@ const categoryColors = {
   "Tech & Business": "bg-teal-100 text-teal-800",
 };
 
-export default function CalendarView({ onBack, onNavigateEvents, onNavigateProfile }) {
+export default function CalendarView({ onBack }) {
   const navigate = useNavigate();
   const [eventsData, setEventsData] = useState([]);
-  const [filteredEvents, setFilteredEvents] = useState([]); // Filtered events after applying search or filter
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [month, setMonth] = useState(2); // March (0-based index)
   const [year, setYear] = useState(2025);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch events from backend
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -50,16 +49,16 @@ export default function CalendarView({ onBack, onNavigateEvents, onNavigateProfi
         }
 
         const data = await response.json();
-        console.log("Fetched Events Data:", data);
 
-        // Map fetched events by date
         const mappedEvents = data.map((event) => {
           const start = event.start;
           const date = start ? start.split(" ")[0] : "N/A";
           const time = start ? start.split(" ")[1] : "N/A";
-          const categoryColor = categoryColors[event.category] || "bg-gray-100 text-gray-800"; // Set color based on category
+          const categoryColor =
+            categoryColors[event.category] || "bg-gray-100 text-gray-800";
 
           return {
+            id: event.id,
             title: event.title,
             organizer: event.organizer_name || "N/A",
             category: event.category || "N/A",
@@ -76,7 +75,7 @@ export default function CalendarView({ onBack, onNavigateEvents, onNavigateProfi
         });
 
         setEventsData(mappedEvents);
-        setFilteredEvents(mappedEvents); // Initially set filtered events to all events
+        setFilteredEvents(mappedEvents);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -86,6 +85,39 @@ export default function CalendarView({ onBack, onNavigateEvents, onNavigateProfi
 
     fetchEvents();
   }, [navigate]);
+
+  const handleEventClick = async (event) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:5003/check_registration?event_id=${event.id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to check registration status");
+      }
+
+      const data = await response.json();
+      const isRegistered = data.is_registered;
+
+      setSelectedEvent({ ...event, isRegistered });
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const generateCalendar = (year, month) => {
     const firstDayOfMonth = new Date(year, month, 1).getDay();
@@ -109,12 +141,13 @@ export default function CalendarView({ onBack, onNavigateEvents, onNavigateProfi
           nextCounter++;
         } else {
           let dateKey = `${year}-${(month + 1).toString().padStart(2, "0")}-${dayCounter.toString().padStart(2, "0")}`;
-          // Match events to the corresponding date
+
           week.push({
             day: dayCounter,
             events: filteredEvents.filter(event => event.date === dateKey),
             isGray: false,
           });
+
           dayCounter++;
         }
       }
@@ -137,21 +170,24 @@ export default function CalendarView({ onBack, onNavigateEvents, onNavigateProfi
 
   return (
     <div className="h-screen flex flex-col">
-     <HeaderBar
-         menuOptions={[
-           { label: "EVENTS", onClick: () => navigate("/events") },
-           { label: "PROFILE", onClick: () => navigate("/profile") },
-           { label: "LOGOUT", onClick: () => {
-             localStorage.removeItem("token");
-             navigate("/login");
-           }},
-         ]}
-       />
+      <HeaderBar
+        menuOptions={[
+          { label: "EVENTS", onClick: () => navigate("/events") },
+          { label: "PROFILE", onClick: () => navigate("/profile") },
+          {
+            label: "LOGOUT",
+            onClick: () => {
+              localStorage.removeItem("token");
+              navigate("/login");
+            },
+          },
+        ]}
+      />
 
       {/* MONTH NAVIGATION */}
       <div className="flex justify-between items-center px-6 py-4">
         <button onClick={onBack} className="flex items-center">
-          <ChevronLeft className="w-5 h-5" /> {/* Back Button */}
+          <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="flex items-center space-x-4">
           <button onClick={() => handleMonthChange("prev")}>
@@ -173,7 +209,9 @@ export default function CalendarView({ onBack, onNavigateEvents, onNavigateProfi
           <thead>
             <tr className="border border-black">
               {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-                <th key={d} className="border border-black p-2 font-semibold">{d}</th>
+                <th key={d} className="border border-black p-2 font-semibold">
+                  {d}
+                </th>
               ))}
             </tr>
           </thead>
@@ -181,16 +219,24 @@ export default function CalendarView({ onBack, onNavigateEvents, onNavigateProfi
             {calendar.map((week, i) => (
               <tr key={i} className="border border-black">
                 {week.map((day, j) => (
-                  <td key={j} className="border border-black h-24 w-32 align-top p-2 relative">
-                    <div className={`absolute top-1 left-2 text-sm font-semibold ${day.isGray ? "text-gray-400" : "text-black"}`}>
+                  <td
+                    key={j}
+                    className="border border-black h-24 w-32 align-top p-2 relative"
+                  >
+                    <div
+                      className={`absolute top-1 left-2 text-sm font-semibold ${
+                        day.isGray ? "text-gray-400" : "text-black"
+                      }`}
+                    >
                       {day.day}
                     </div>
+
                     {day.events &&
                       day.events.map((event, idx) => (
                         <div
                           key={idx}
-                          className={`text-xs ${event.color} mt-5 cursor-pointer`}
-                          onClick={() => setSelectedEvent(event)}
+                          className={`text-xs ${event.color} mt-5 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-md`}
+                          onClick={() => handleEventClick(event)}
                         >
                           {event.title}
                         </div>
@@ -204,10 +250,17 @@ export default function CalendarView({ onBack, onNavigateEvents, onNavigateProfi
       </div>
 
       {/* FOOTER */}
-      <footer className="text-sm text-gray-600 p-4 pl-6">LOGGED IN AS: ATTENDEE</footer>
+      <footer className="text-sm text-gray-600 p-4 pl-6">
+        LOGGED IN AS: ATTENDEE
+      </footer>
 
       {/* EVENT MODAL */}
-      {selectedEvent && <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
+      {selectedEvent && (
+        <EventModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
+      )}
     </div>
   );
 }

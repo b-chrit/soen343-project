@@ -52,8 +52,17 @@ class Organizer(User):
     def get_organization_name( self ) -> str:
         return self.__organization_name
 
-    def create_event(self, session, title: str, start: datetime, end: datetime, category: str, description: str, location: str):
-        new_event = Event(title=title, start=start, end=end, category=category, description=description, location=location, organizer_id=self.id)
+    def create_event(self, session, title: str, start: datetime, end: datetime, category: str, description: str, location: str, sponsor_id: int):
+        new_event = Event(
+            title=title, 
+            start=start, 
+            end=end, 
+            category=category, 
+            description=description, 
+            location=location, 
+            organizer_id=self.id, 
+            sponsor_id=sponsor_id  # Pass the sponsor_id here
+        )
         session.add(new_event)
         session.commit()
         self.__event_id = new_event.get_id()

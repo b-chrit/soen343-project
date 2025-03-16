@@ -1,48 +1,50 @@
 import { useState } from "react";
-import { CheckCircle, XCircle } from "lucide-react"; // Success icon for better feedback
+import { CheckCircle, XCircle } from "lucide-react";
 
-export default function EventModal({ event, onClose }) {
+export default function EventModal({ event, onClose, updateEvents }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isSuccess, setIsSuccess] = useState(false); // State for success message
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(event.isRegistered);
 
-  if (!event) return null;
-
-  const registerForEvent = async () => {
+  const handleRegistration = async () => {
     setIsLoading(true);
     setError(null);
-    setIsSuccess(false); // Reset success message before attempting registration
+    setIsSuccess(false);
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
 
     try {
-      const token = localStorage.getItem("token");
+      const url = isRegistered
+        ? "http://localhost:5003/cancel_registration_for_event"
+        : "http://localhost:5003/register_attendee_for_event";
 
-      if (!token) {
-        // Redirect to login if no token is found
-        window.location.href = "/login";
-        return;
-      }
-
-      const response = await fetch("http://localhost:5003/register_attendee_for_event", {
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          event_id: event.id,  // Send event ID for registration
-        }),
+        body: JSON.stringify({ event_id: event.id }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to register for event");
+        throw new Error(isRegistered ? "Failed to cancel registration" : "Failed to register for event");
       }
 
-      // Successfully registered
-      setIsSuccess(true);  // Show success message
+      setIsSuccess(true);
+      setIsRegistered(!isRegistered);
 
-      // Optional: close the modal after a brief delay for the user to see the success
+      if (updateEvents) {
+        updateEvents(event.id, !isRegistered);
+      }
+
       setTimeout(() => {
-        onClose(); // Close the modal after success
+        onClose();
       }, 2000);
     } catch (err) {
       setError(err.message);
@@ -50,6 +52,8 @@ export default function EventModal({ event, onClose }) {
       setIsLoading(false);
     }
   };
+
+  if (!event) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -99,14 +103,24 @@ export default function EventModal({ event, onClose }) {
           <strong>Description:</strong> {event.description || "No additional details available for this event."}
         </p>
 
-        {/* Button - Initially Black, Hover to White */}
+        {/* Register / Cancel Button */}
         <div className="flex justify-center mt-8">
           <button
-            onClick={registerForEvent}
+            onClick={handleRegistration}
             disabled={isLoading}
-            className={`py-3 px-8 ${isLoading ? "bg-gray-300 cursor-not-allowed" : "bg-black text-white"} font-medium rounded-lg border border-black transition-all duration-300 hover:bg-white hover:text-black`}
+            className={`py-3 px-8 font-medium rounded-lg border transition-all duration-300 
+              ${isLoading
+                ? "bg-gray-300 cursor-not-allowed border-gray-300 text-gray-500"
+                : isRegistered
+                ? "bg-red-600 text-white border-red-600 hover:bg-white hover:text-red-600"
+                : "bg-black text-white border-black hover:bg-white hover:text-black"}
+              `}
           >
-            {isLoading ? "Registering..." : "REGISTER FOR EVENT"}
+            {isLoading
+              ? "Processing..."
+              : isRegistered
+              ? "CANCEL REGISTRATION"
+              : "REGISTER FOR EVENT"}
           </button>
         </div>
 
@@ -114,15 +128,19 @@ export default function EventModal({ event, onClose }) {
         {isSuccess && (
           <div className="mt-6 text-center text-green-600 animate__animated animate__fadeIn">
             <CheckCircle className="w-16 h-16 mx-auto text-green-600" />
-            <p className="text-xl font-semibold">Registration Successful!</p>
-            <p>Your registration for the event was completed successfully.</p>
+            <p className="text-xl font-semibold">
+              {isRegistered ? "Registration Successful!" : "Cancellation Successful!"}
+            </p>
+            <p>
+              {isRegistered
+                ? "Your registration for the event was completed successfully."
+                : "Your registration has been canceled."}
+            </p>
           </div>
         )}
 
         {/* Show Error Message */}
-        {error && (
-          <p className="text-red-500 text-center mt-4">{error}</p>
-        )}
+        {error && <p className="text-red-500 text-center mt-4">{error}</p>}
       </div>
     </div>
   );
