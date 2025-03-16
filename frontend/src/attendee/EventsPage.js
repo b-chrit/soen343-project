@@ -64,6 +64,7 @@ export default function EventsPage({ onBack }) {
         }
 
         const data = await response.json();
+        console.log(data);
         const mappedEvents = data.map((event) => {
           const start = event.start;
           const date = start ? start.split(" ")[0] : "N/A";

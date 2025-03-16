@@ -81,43 +81,52 @@ export default function EventsTable({
       {/* Pagination Controls */}
       {hasEvents && (
         <div className="flex justify-start items-center mt-6 space-x-2">
+          {/* Previous Button */}
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            className={`py-2 px-4 rounded-lg ${
-              currentPage === 1
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-gray-300 text-gray-700"
-            }`}
+            className={`py-2 px-4 rounded-lg transition-all duration-300 border
+              ${
+                currentPage === 1
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gray-300 text-gray-700 hover:bg-black hover:text-white hover:scale-105 hover:shadow-md"
+              }
+            `}
             disabled={currentPage === 1}
           >
             Previous
           </button>
 
+          {/* Page Numbers */}
           <div className="flex space-x-2">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
               <button
                 key={num}
                 onClick={() => setCurrentPage(num)}
-                className={`py-2 px-4 rounded-lg ${
-                  num === currentPage
-                    ? "bg-black text-white"
-                    : "bg-gray-300 text-gray-700"
-                }`}
+                className={`py-2 px-4 rounded-lg transition-all duration-300 border
+                  ${
+                    num === currentPage
+                      ? "bg-black text-white"
+                      : "bg-gray-300 text-gray-700 hover:bg-black hover:text-white hover:scale-105 hover:shadow-md"
+                  }
+                `}
               >
                 {num}
               </button>
             ))}
           </div>
 
+          {/* Next Button */}
           <button
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
-            className={`py-2 px-4 rounded-lg ${
-              currentPage === totalPages
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-gray-300 text-gray-700"
-            }`}
+            className={`py-2 px-4 rounded-lg transition-all duration-300 border
+              ${
+                currentPage === totalPages
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gray-300 text-gray-700 hover:bg-black hover:text-white hover:scale-105 hover:shadow-md"
+              }
+            `}
             disabled={currentPage === totalPages}
           >
             Next
