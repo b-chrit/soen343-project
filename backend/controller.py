@@ -1,3 +1,4 @@
+from models.users.admin import Admin
 from models import Registration
 from flask import Flask, request, jsonify  # Import required modules
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -36,37 +37,96 @@ jwt = JWTManager(app)
 def index():
     return {'status': 'ok'}, 200
 
-# ----------------------- 
-# ✅ Attendee Registration 
-# ----------------------- 
-@app.route('/register_attendee', methods=['POST'])
-def register_attendee():
+@app.route('/register_user', methods=['POST'])
+def register_user():
     data = request.get_json()
 
-    required_fields = ['email', 'password', 'first_name', 'last_name']
+    # Required fields common to all users
+    required_fields = ['email', 'password', 'first_name', 'last_name', 'user_type']
 
-    # Check if all required fields are present in the data
-    if not all(field in data for field in required_fields):
-        missing = [field for field in required_fields if field not in data]
+    # Validate missing fields
+    missing = [field for field in required_fields if field not in data]
+    if missing:
         return {'error': 'Missing required fields', 'missing': missing}, 400
 
-    # Extract data and create a new Attendee
+    # Extract and normalize fields
     email = data['email']
     password = data['password']
     first_name = data['first_name']
     last_name = data['last_name']
+    user_type = data['user_type'].strip().lower()
 
-    # DB operations: Check if the email already exists
+    # Normalize 'administrator' to 'admin'
+    if user_type == 'administrator':
+        user_type = 'admin'
+
+    valid_user_types = ['attendee', 'organizer', 'stakeholder', 'admin']
+
+    # Validate user type
+    if user_type not in valid_user_types:
+        return {'error': 'Invalid user_type provided'}, 400
+
     with SQLSession() as session:
+        # Check if the email is already registered
         existing_user = User.find(session, email=email)
         if existing_user:
             return {'error': 'Email already registered'}, 409
 
-        # Create and add attendee to the database
-        attendee = Attendee(email=email, password=password, first_name=first_name, last_name=last_name)
-        Attendee.add(session, attendee)
+        # Initialize user based on type
+        if user_type == 'attendee':
+            new_user = Attendee(
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name
+            )
+        
+        elif user_type == 'organizer':
+            # Additional required fields for Organizer
+            organizer_fields = ['organization_name', 'phone_number']
+            missing_organizer_fields = [field for field in organizer_fields if field not in data]
 
-    return {'status': 'Attendee registered successfully'}, 201
+            if missing_organizer_fields:
+                return {
+                    'error': 'Missing required fields for organizer',
+                    'missing': missing_organizer_fields
+                }, 400
+
+            organization_name = data['organization_name']
+            phone_number = data['phone_number']
+
+            new_user = Organizer(
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                organization_name=organization_name,
+                phone_number=phone_number
+            )
+
+        elif user_type == 'stakeholder':
+            new_user = Stakeholder(
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name
+            )
+
+        elif user_type == 'admin':
+            new_user = Admin(
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name
+            )
+
+        else:
+            return {'error': 'Unhandled user_type'}, 500  # This should never happen
+
+        # Add the user to the database
+        User.add(session, new_user)
+
+    return {'status': f'{user_type.capitalize()} registered successfully'}, 201
 
 # ----------------------- 
 # ✅ Login Endpoint 
