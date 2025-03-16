@@ -305,31 +305,50 @@ def get_registered_events():
         return jsonify(event_data), 200
 
 # ----------------------- 
-# ✅ Delete User Endpoint 
+# ✅ Delete User Endpoint (Admin Only)
 # -----------------------
-# Deletes the authenticated user's account.
-# Requires: JWT token in Authorization header.
+# Deletes a user account by user_id.
+# Requires: Admin JWT token in Authorization header.
 # Method: DELETE
 # Route: /delete_user
-# Request body: None
-# Response: 200 on success, 404 if user not found.
+# Request body: { "user_id": int }
+# Response: 200 on success, 403 if unauthorized, 404 if user not found.
 @app.route("/delete_user", methods=["DELETE"])
-@jwt_required()  # JWT is required to access this endpoint
+@jwt_required()  # JWT is required (Admin access only)
 def delete_user():
-    user_id = int(get_jwt_identity())  # Get the user ID from the JWT token
+    # Get the ID of the user making the request (should be admin)
+    admin_id = int(get_jwt_identity())
+
+    # Get the request body data
+    data = request.get_json()
+
+    # ✅ Ensure user_id is provided in the request
+    if not data or 'user_id' not in data:
+        return {'error': 'Missing user_id'}, 400
+
+    user_to_delete_id = data['user_id']
 
     with SQLSession() as session:
-        # Find the user
-        user = User.find(session, user_id=user_id)
+        # ✅ Verify the requester is an admin
+        admin = User.find(session, user_id=admin_id)
+        if not admin or admin.get_type() != 'admin':
+            return {'error': 'Access denied'}, 403
 
-        if not user:
+        # ✅ Find the user to delete by user_id
+        user_to_delete = User.find(session, user_id=user_to_delete_id)
+        if not user_to_delete:
             return {'error': 'User not found'}, 404
 
-        # Delete the user
-        session.delete(user)
+        # ✅ Optional: Prevent the admin from deleting their own account
+        if user_to_delete.get_id() == admin_id:
+            return {'error': 'Admins cannot delete themselves'}, 400
+
+        # ✅ Delete the user account
+        session.delete(user_to_delete)
         session.commit()
 
         return {'status': 'User deleted successfully'}, 200
+
     
 
 # -----------------------
