@@ -25,11 +25,13 @@ export default function EventDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch events from the backend and categorize them
+  const userType = localStorage.getItem("user_type");
+
   const fetchEvents = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
+
       if (!token) {
         navigate("/login");
         return;
@@ -116,6 +118,7 @@ export default function EventDashboard() {
             label: "LOGOUT",
             onClick: () => {
               localStorage.removeItem("token");
+              localStorage.removeItem("user_type");
               navigate("/login");
             },
           },
@@ -171,9 +174,7 @@ export default function EventDashboard() {
                 <p className="text-gray-600 text-sm">Loading events...</p>
               )}
 
-              {error && (
-                <p className="text-red-500 text-sm">{error}</p>
-              )}
+              {error && <p className="text-red-500 text-sm">{error}</p>}
 
               {!loading && !error && eventsData[currentDay].length === 0 && (
                 <div className="bg-gray-100 p-6 rounded-lg shadow-md text-center animate-fadeIn">
@@ -225,7 +226,7 @@ export default function EventDashboard() {
       </div>
 
       <footer className="text-sm text-gray-600 p-4 pl-6 absolute bottom-0 left-0">
-        LOGGED IN AS: ATTENDEE
+        LOGGED IN AS: {userType ? userType.toUpperCase() : "UNKNOWN"}
       </footer>
     </div>
   );

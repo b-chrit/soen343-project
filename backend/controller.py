@@ -149,12 +149,17 @@ def login():
         user = User.auth(session, required_data['email'], required_data['password'])
 
         if user:
-            # Generate a JWT token for the user upon successful login
             user_id = user.get_id()
+            user_type = user.get_type()  # Grab the user_type from the User object
             token = create_access_token(identity=f'{user_id}')
-            return {'token': token}, 200
+
+            return {
+                'token': token,
+                'user_type': user_type
+            }, 200
 
         return {'error': 'invalid_credentials'}, 401
+
 
 # ----------------------- 
 # ✅ Get Profile 

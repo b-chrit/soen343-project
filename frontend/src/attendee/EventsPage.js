@@ -19,6 +19,7 @@ const categoryColors = {
 
 export default function EventsPage({ onBack }) {
   const navigate = useNavigate();
+
   const [eventsData, setEventsData] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [registeredEvents, setRegisteredEvents] = useState([]);
@@ -31,6 +32,10 @@ export default function EventsPage({ onBack }) {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [viewingRegistrations, setViewingRegistrations] = useState(false);
+
+  // ✅ Retrieve user type from local storage
+  const userType = localStorage.getItem("user_type");
+  console.log("Logged in user type:", userType);
 
   const resetFilters = () => {
     setSelectedCategory("");
@@ -64,7 +69,8 @@ export default function EventsPage({ onBack }) {
         }
 
         const data = await response.json();
-        console.log(data);
+        console.log("Fetched Events:", data);
+
         const mappedEvents = data.map((event) => {
           const start = event.start;
           const date = start ? start.split(" ")[0] : "N/A";
@@ -77,9 +83,9 @@ export default function EventsPage({ onBack }) {
             title: event.title,
             organizer: event.organizer_name || "N/A",
             category: event.category || "N/A",
-            categoryColor: categoryColor,
-            date: date,
-            time: time,
+            categoryColor,
+            date,
+            time,
             sponsored: event.sponsor_name ? "Yes" : "No",
             sponsor: event.sponsor_name || "N/A",
             organizer_name: event.organizer_name,
@@ -159,6 +165,7 @@ export default function EventsPage({ onBack }) {
       }
 
       const registeredEvents = await response.json();
+
       const mappedRegisteredEvents = registeredEvents.map((event) => {
         const start = event.start;
         const date = start ? start.split(" ")[0] : "N/A";
@@ -171,9 +178,9 @@ export default function EventsPage({ onBack }) {
           title: event.title,
           organizer: event.organizer_name || "N/A",
           category: event.category || "N/A",
-          categoryColor: categoryColor,
-          date: date,
-          time: time,
+          categoryColor,
+          date,
+          time,
           sponsored: event.sponsor_name ? "Yes" : "No",
           sponsor: event.sponsor_name || "N/A",
           organizer_name: event.organizer_name,
@@ -268,6 +275,7 @@ export default function EventsPage({ onBack }) {
             label: "LOGOUT",
             onClick: () => {
               localStorage.removeItem("token");
+              localStorage.removeItem("user_type");
               navigate("/login");
             },
           },
@@ -328,7 +336,7 @@ export default function EventsPage({ onBack }) {
       )}
 
       <footer className="text-sm text-gray-600 p-4 pl-6 absolute bottom-0 left-0">
-        LOGGED IN AS: ATTENDEE
+        LOGGED IN AS: {userType ? userType.toUpperCase() : "UNKNOWN"}
       </footer>
     </div>
   );

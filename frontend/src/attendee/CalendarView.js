@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import EventModal from "../EventModal";
 import HeaderBar from "../HeaderBar";
@@ -17,6 +17,7 @@ const categoryColors = {
 
 export default function CalendarView({ onBack }) {
   const navigate = useNavigate();
+
   const [eventsData, setEventsData] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -24,6 +25,10 @@ export default function CalendarView({ onBack }) {
   const [year, setYear] = useState(2025);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // ✅ Get the user type from localStorage
+  const userType = localStorage.getItem("user_type");
+  console.log("Logged in user type:", userType);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -63,8 +68,8 @@ export default function CalendarView({ onBack }) {
             organizer: event.organizer_name || "N/A",
             category: event.category || "N/A",
             color: categoryColor,
-            date: date,
-            time: time,
+            date,
+            time,
             sponsored: event.sponsor_name ? "Yes" : "No",
             sponsor: event.sponsor_name || "N/A",
             description: event.description,
@@ -178,6 +183,7 @@ export default function CalendarView({ onBack }) {
             label: "LOGOUT",
             onClick: () => {
               localStorage.removeItem("token");
+              localStorage.removeItem("user_type");
               navigate("/login");
             },
           },
@@ -251,7 +257,7 @@ export default function CalendarView({ onBack }) {
 
       {/* FOOTER */}
       <footer className="text-sm text-gray-600 p-4 pl-6">
-        LOGGED IN AS: ATTENDEE
+        LOGGED IN AS: {userType ? userType.toUpperCase() : "UNKNOWN"}
       </footer>
 
       {/* EVENT MODAL */}
