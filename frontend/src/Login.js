@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from './logo.jpg'; // Assuming you have the logo here!
+import logo from './logo.jpg';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -12,7 +12,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if email and password are provided
+    // Validate input fields
     if (!email || !password) {
       setApiError('Please provide both email and password.');
       return;
@@ -25,16 +25,23 @@ const Login = () => {
         body: JSON.stringify({ email, password }),
       });
 
+      const result = await response.json();
+      console.log('result: ' + result);
       if (response.ok) {
-        const result = await response.json();
-        // Save token to local storage for authentication
+        // Save token and user_type in local storage
         localStorage.setItem("token", result.token);
-        navigate("/dashboard"); // Redirect to the dashboard after successful login
+        localStorage.setItem("user_type", result.user_type);
+
+        // Console log for verification
+        console.log("Logged in user type:", result.user_type);
+
+        // Navigate to dashboard
+        navigate("/dashboard");
       } else {
-        const result = await response.json();
         setApiError(result.error || "Login failed. Please try again.");
       }
     } catch (error) {
+      console.log("ERROR", error);
       setApiError("Something went wrong. Please try again later.");
     }
   };
@@ -67,7 +74,9 @@ const Login = () => {
           </p>
 
           {/* Error message */}
-          {apiError && <p className="text-red-500 text-xs font-medium">{apiError}</p>}
+          {apiError && (
+            <p className="text-red-500 text-xs font-medium mb-4">{apiError}</p>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-8 text-left">
             {/* Email */}

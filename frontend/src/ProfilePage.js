@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, Eye, EyeOff } from "lucide-react"; // For the eye icon
+import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 import HeaderBar from "./HeaderBar";
 import { useNavigate } from "react-router-dom";
 
@@ -20,16 +20,17 @@ export default function ProfilePage({ onBack }) {
     email: "",
   });
 
-  // States for password visibility toggles
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Separate status for profile and password update
-  const [updateStatus, setUpdateStatus] = useState(""); // For profile and password update status
-  const [updateError, setUpdateError] = useState(""); // For storing backend error messages
+  const [updateStatus, setUpdateStatus] = useState("");
+  const [updateError, setUpdateError] = useState("");
 
   const navigate = useNavigate();
+
+  // ✅ Get the user type from localStorage
+  const userType = localStorage.getItem("user_type");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -55,7 +56,6 @@ export default function ProfilePage({ onBack }) {
 
         const userData = await response.json();
 
-        // Store the initial form data separately
         setInitialFormData({
           first_name: userData.first_name,
           last_name: userData.last_name,
@@ -84,14 +84,14 @@ export default function ProfilePage({ onBack }) {
 
   const handleEditClick = () => setIsEditing(true);
   const handleCancelClick = () => {
-    // Reset the form data to the initial values
     setFormData(initialFormData);
     setIsEditing(false);
   };
-  
+
   const handleProfileUpdate = async () => {
     console.log("Changes confirmed:", formData);
     setIsEditing(false);
+
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:5003/update_profile", {
@@ -132,7 +132,6 @@ export default function ProfilePage({ onBack }) {
   const handleConfirmPasswordChange = async () => {
     console.log("Submitting password change:", formData);
 
-    // Reset error message
     setUpdateError("");
 
     if (formData.newPassword !== formData.confirmPassword) {
@@ -169,7 +168,6 @@ export default function ProfilePage({ onBack }) {
       setUpdateStatus("success");
       setIsChangingPassword(false);
 
-      // Auto-hide success/error message after 3 seconds
       setTimeout(() => {
         setUpdateStatus("");
         setUpdateError("");
@@ -179,7 +177,6 @@ export default function ProfilePage({ onBack }) {
     }
   };
 
-  // Toggle visibility for password fields
   const toggleCurrentPassword = () => setShowCurrentPassword(!showCurrentPassword);
   const toggleNewPassword = () => setShowNewPassword(!showNewPassword);
   const toggleConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
@@ -194,14 +191,14 @@ export default function ProfilePage({ onBack }) {
             label: "LOGOUT",
             onClick: () => {
               localStorage.removeItem("token");
+              localStorage.removeItem("user_type");
               navigate("/login");
             },
           },
         ]}
       />
-      {/* MAIN CONTENT */}
+
       <div className="px-16 py-8 flex flex-col">
-        {/* BACK BUTTON & TITLE */}
         <div className="flex items-center space-x-4 mb-8">
           <button onClick={onBack} className="p-2">
             <ChevronLeft className="w-7 h-7" />
@@ -209,16 +206,13 @@ export default function ProfilePage({ onBack }) {
           <h1 className="text-4xl font-bold uppercase">My Profile</h1>
         </div>
 
-        {/* PROFILE CARD */}
         <div className="border border-black rounded-lg p-12 w-[600px] mx-auto">
-          {/* Avatar (Top Left) */}
           <div className="flex items-start">
             <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
               <span className="text-gray-500 text-4xl">👤</span>
             </div>
           </div>
 
-          {/* Form Fields (Two per Row) */}
           <div className="mt-6 grid grid-cols-2 gap-6">
             {Object.keys(formData).map((key) => {
               if (
@@ -242,10 +236,10 @@ export default function ProfilePage({ onBack }) {
                   </div>
                 );
               }
+              return null;
             })}
           </div>
 
-          {/* Password Change Section */}
           {isChangingPassword && (
             <div className="mt-6">
               <div className="flex flex-col">
@@ -266,6 +260,7 @@ export default function ProfilePage({ onBack }) {
                   </span>
                 </div>
               </div>
+
               <div className="flex flex-col mt-4">
                 <label className="text-sm text-gray-700">New Password</label>
                 <div className="relative">
@@ -284,6 +279,7 @@ export default function ProfilePage({ onBack }) {
                   </span>
                 </div>
               </div>
+
               <div className="flex flex-col mt-4">
                 <label className="text-sm text-gray-700">Confirm New Password</label>
                 <div className="relative">
@@ -302,6 +298,7 @@ export default function ProfilePage({ onBack }) {
                   </span>
                 </div>
               </div>
+
               <div className="flex justify-end mt-4 space-x-4">
                 <button
                   className="py-2 px-6 bg-gray-300 text-black font-medium border border-gray-500 transition hover:bg-gray-400"
@@ -319,7 +316,6 @@ export default function ProfilePage({ onBack }) {
             </div>
           )}
 
-          {/* Display Status (Success/Error Message) */}
           {updateStatus && (
             <div
               className={`mt-4 ${updateStatus === "success" ? "text-green-500" : "text-red-500"}`}
@@ -330,7 +326,6 @@ export default function ProfilePage({ onBack }) {
             </div>
           )}
 
-          {/* Action Buttons */}
           {!isChangingPassword && (
             <div className="flex justify-end mt-6 space-x-4">
               {isEditing ? (
@@ -371,7 +366,7 @@ export default function ProfilePage({ onBack }) {
 
       {/* FOOTER */}
       <footer className="text-sm text-gray-600 p-4 pl-6 absolute bottom-0 left-0">
-        LOGGED IN AS: ATTENDEE
+        LOGGED IN AS: {userType ? userType.toUpperCase() : "UNKNOWN"}
       </footer>
     </div>
   );
