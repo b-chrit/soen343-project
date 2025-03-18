@@ -1,180 +1,13 @@
-import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import EventModal from "../EventModal";
-import HeaderBar from "../HeaderBar";
 import { useNavigate } from "react-router-dom";
+import { CalendarPlus, BarChart, Users, FolderPlus } from "lucide-react";
+import HeaderBar from "../HeaderBar"; // adjust the path as needed
 
-const eventsPerPage = 5;
-
-const categoryColors = {
-  Technology: "bg-blue-100 text-blue-800",
-  Finance: "bg-green-100 text-green-800",
-  Business: "bg-yellow-100 text-yellow-800",
-  Marketing: "bg-purple-100 text-purple-800",
-  "AI & Tech": "bg-pink-100 text-pink-800",
-  "Tech & Business": "bg-teal-100 text-teal-800",
-};
-
-export default function CalendarView({ onBack }) {
+export default function OrganizerLandingPage() {
   const navigate = useNavigate();
 
-  const [eventsData, setEventsData] = useState([]);
-  const [filteredEvents, setFilteredEvents] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [month, setMonth] = useState(2); // March (0-based index)
-  const [year, setYear] = useState(2025);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // ✅ Get the user type from localStorage
-  const userType = localStorage.getItem("user_type");
-  console.log("Logged in user type:", userType);
-
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-          navigate("/login");
-          return;
-        }
-
-        const response = await fetch("http://localhost:5003/get_event", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch events");
-        }
-
-        const data = await response.json();
-
-        const mappedEvents = data.map((event) => {
-          const start = event.start;
-          const date = start ? start.split(" ")[0] : "N/A";
-          const time = start ? start.split(" ")[1] : "N/A";
-          const categoryColor =
-            categoryColors[event.category] || "bg-gray-100 text-gray-800";
-
-          return {
-            id: event.id,
-            title: event.title,
-            organizer: event.organizer_name || "N/A",
-            category: event.category || "N/A",
-            color: categoryColor,
-            date,
-            time,
-            sponsored: event.sponsor_name ? "Yes" : "No",
-            sponsor: event.sponsor_name || "N/A",
-            description: event.description,
-            location: event.location,
-            start: event.start,
-            end: event.end,
-          };
-        });
-
-        setEventsData(mappedEvents);
-        setFilteredEvents(mappedEvents);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvents();
-  }, [navigate]);
-
-  const handleEventClick = async (event) => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `http://localhost:5003/check_registration?event_id=${event.id}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to check registration status");
-      }
-
-      const data = await response.json();
-      const isRegistered = data.is_registered;
-
-      setSelectedEvent({ ...event, isRegistered });
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const generateCalendar = (year, month) => {
-    const firstDayOfMonth = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const prevMonthDays = new Date(year, month, 0).getDate();
-    const nextMonthStart = 1;
-
-    let calendar = [];
-    let dayCounter = 1;
-    let prevCounter = prevMonthDays - (firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1) + 1;
-    let nextCounter = nextMonthStart;
-
-    for (let i = 0; i < 6; i++) {
-      let week = [];
-      for (let j = 0; j < 7; j++) {
-        if (i === 0 && j < (firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1)) {
-          week.push({ day: prevCounter, isGray: true });
-          prevCounter++;
-        } else if (dayCounter > daysInMonth) {
-          week.push({ day: nextCounter, isGray: true });
-          nextCounter++;
-        } else {
-          let dateKey = `${year}-${(month + 1).toString().padStart(2, "0")}-${dayCounter.toString().padStart(2, "0")}`;
-
-          week.push({
-            day: dayCounter,
-            events: filteredEvents.filter(event => event.date === dateKey),
-            isGray: false,
-          });
-
-          dayCounter++;
-        }
-      }
-      calendar.push(week);
-    }
-    return calendar;
-  };
-
-  const handleMonthChange = (direction) => {
-    if (direction === "prev") {
-      setMonth((prev) => (prev === 0 ? 11 : prev - 1));
-      setYear((prev) => (month === 0 ? prev - 1 : prev));
-    } else {
-      setMonth((prev) => (prev === 11 ? 0 : prev + 1));
-      setYear((prev) => (month === 11 ? prev + 1 : prev));
-    }
-  };
-
-  const calendar = generateCalendar(year, month);
-
   return (
-    <div className="h-screen flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* HeaderBar Component */}
       <HeaderBar
         menuOptions={[
           { label: "EVENTS", onClick: () => navigate("/events") },
@@ -190,83 +23,111 @@ export default function CalendarView({ onBack }) {
         ]}
       />
 
-      {/* MONTH NAVIGATION */}
-      <div className="flex justify-between items-center px-6 py-4">
-        <button onClick={onBack} className="flex items-center">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div className="flex items-center space-x-4">
-          <button onClick={() => handleMonthChange("prev")}>
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <h2 className="text-lg font-semibold">
-            {new Date(year, month).toLocaleString("default", { month: "long" })} {year}
-          </h2>
-          <button onClick={() => handleMonthChange("next")}>
-            <ChevronRight className="w-5 h-5" />
+      {/* Hero Section */}
+      <section className="px-16 py-12 bg-gray-100 flex justify-between items-center">
+        <div>
+          <h2 className="text-4xl font-bold mb-4">Welcome, Organizer!</h2>
+          <p className="text-gray-600 text-lg mb-6">
+            Manage your events, sponsors, and view insights at a glance.
+          </p>
+          <button
+            onClick={() => navigate("/create-event")}
+            className="bg-black text-white py-3 px-8 rounded-lg transition-all duration-300 border border-black hover:bg-white hover:text-black hover:scale-105 hover:shadow-md"
+          >
+            Create New Event
           </button>
         </div>
-        <div className="w-5" />
-      </div>
+        <div className="hidden md:block text-9xl font-extrabold text-gray-300">
+          SEES
+        </div>
+      </section>
 
-      {/* CALENDAR GRID */}
-      <div className="flex justify-center flex-grow items-center">
-        <table className="border-collapse border w-3/4 text-center">
-          <thead>
-            <tr className="border border-black">
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-                <th key={d} className="border border-black p-2 font-semibold">
-                  {d}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {calendar.map((week, i) => (
-              <tr key={i} className="border border-black">
-                {week.map((day, j) => (
-                  <td
-                    key={j}
-                    className="border border-black h-24 w-32 align-top p-2 relative"
-                  >
-                    <div
-                      className={`absolute top-1 left-2 text-sm font-semibold ${
-                        day.isGray ? "text-gray-400" : "text-black"
-                      }`}
-                    >
-                      {day.day}
-                    </div>
-
-                    {day.events &&
-                      day.events.map((event, idx) => (
-                        <div
-                          key={idx}
-                          className={`text-xs ${event.color} mt-5 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-md`}
-                          onClick={() => handleEventClick(event)}
-                        >
-                          {event.title}
-                        </div>
-                      ))}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* FOOTER */}
-      <footer className="text-sm text-gray-600 p-4 pl-6">
-        LOGGED IN AS: {userType ? userType.toUpperCase() : "UNKNOWN"}
-      </footer>
-
-      {/* EVENT MODAL */}
-      {selectedEvent && (
-        <EventModal
-          event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
+      {/* Quick Actions */}
+      <section className="px-16 py-10 grid grid-cols-1 md:grid-cols-4 gap-6">
+        <ActionCard
+          label="Create Event"
+          icon={<CalendarPlus className="w-8 h-8" />}
+          onClick={() => navigate("/create-event")}
         />
-      )}
+        <ActionCard
+          label="My Events"
+          icon={<FolderPlus className="w-8 h-8" />}
+          onClick={() => navigate("/events")}
+        />
+        <ActionCard
+          label="Manage Sponsors"
+          icon={<Users className="w-8 h-8" />}
+          onClick={() => navigate("/sponsors")}
+        />
+        <ActionCard
+          label="View Analytics"
+          icon={<BarChart className="w-8 h-8" />}
+          onClick={() => navigate("/analytics")}
+        />
+      </section>
+
+      {/* Events Summary */}
+      <section className="px-16 py-10">
+        <h3 className="text-2xl font-semibold mb-6">Your Events</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Example Event Cards */}
+          <EventCard
+            title="AI Summit 2025"
+            date="March 24, 2025"
+            location="Online"
+            registrations={120}
+            navigate={navigate}
+          />
+          <EventCard
+            title="Finance Bootcamp"
+            date="April 12, 2025"
+            location="New York"
+            registrations={85}
+            navigate={navigate}
+          />
+          <EventCard
+            title="Marketing Expo"
+            date="May 7, 2025"
+            location="Toronto"
+            registrations={45}
+            navigate={navigate}
+          />
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="text-sm text-gray-600 p-4 pl-6">
+        LOGGED IN AS: ORGANIZER
+      </footer>
     </div>
   );
 }
+
+const ActionCard = ({ label, icon, onClick }) => (
+  <div
+    onClick={onClick}
+    className="bg-white border border-gray-300 rounded-lg shadow-sm hover:shadow-md cursor-pointer p-6 flex flex-col items-center transition-all duration-300 hover:scale-105"
+  >
+    <div className="mb-4 text-black">{icon}</div>
+    <h4 className="text-lg font-semibold">{label}</h4>
+  </div>
+);
+
+const EventCard = ({ title, date, location, registrations, navigate }) => (
+  <div className="bg-white border border-gray-300 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] p-6 flex flex-col justify-between">
+    <div>
+      <h4 className="text-xl font-bold mb-2">{title}</h4>
+      <p className="text-gray-600 text-sm mb-1">Date: {date}</p>
+      <p className="text-gray-600 text-sm mb-1">Location: {location}</p>
+      <p className="text-gray-600 text-sm">Registrations: {registrations}</p>
+    </div>
+    <div className="flex justify-end mt-6">
+      <button
+        onClick={() => navigate("/events")}
+        className="bg-black text-white py-2 px-6 rounded-lg text-sm transition-all duration-300 hover:bg-white hover:text-black border border-black hover:scale-105"
+      >
+        Manage
+      </button>
+    </div>
+  </div>
+);

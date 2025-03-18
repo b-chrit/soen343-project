@@ -1,7 +1,8 @@
 import { Eye, CalendarX } from "lucide-react";
 
 export default function EventsTable({
-  events,
+  events = [],
+  columns = [],
   onEventClick,
   currentPage,
   setCurrentPage,
@@ -14,38 +15,35 @@ export default function EventsTable({
       <div className="border border-gray-300 rounded-lg overflow-hidden w-full">
         {hasEvents ? (
           <table className="w-full text-left table-fixed">
+            {/* ✅ Dynamic Headers */}
             <thead className="bg-gray-200 text-gray-700 uppercase text-sm">
               <tr>
-                <th className="py-3 px-4 w-1/5">Event</th>
-                <th className="py-3 px-4 w-1/5">Organizer</th>
-                <th className="py-3 px-4 w-1/5">Category</th>
-                <th className="py-3 px-4 w-1/5">Date</th>
-                <th className="py-3 px-4 w-1/5">Time</th>
-                <th className="py-3 px-4 w-1/5">Sponsored</th>
-                <th className="py-3 px-4 w-1/5">Sponsor</th>
-                <th className="py-3 px-4 w-1/12"></th>
+                {columns.map((col, idx) => (
+                  <th key={idx} className={`py-3 px-4 ${col.width || "w-auto"}`}>
+                    {col.label} {/* ✅ FIXED: use label instead of header */}
+                  </th>
+                ))}
+                <th className="py-3 px-4 w-1/12"></th> {/* Actions column */}
               </tr>
             </thead>
 
+            {/* ✅ Dynamic Rows */}
             <tbody className="divide-y divide-gray-300">
-              {events.map((event, index) => (
+              {events.map((event, rowIndex) => (
                 <tr
-                  key={index}
+                  key={rowIndex}
                   className="hover:bg-gray-200 transition duration-200"
                 >
-                  <td className="py-3 px-4">{event.title}</td>
-                  <td className="py-3 px-4">{event.organizer}</td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`px-2 py-1 rounded-lg text-xs ${event.categoryColor}`}
-                    >
-                      {event.category}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">{event.date}</td>
-                  <td className="py-3 px-4">{event.time}</td>
-                  <td className="py-3 px-4">{event.sponsored}</td>
-                  <td className="py-3 px-4">{event.sponsor}</td>
+                  {columns.map((col, colIndex) => (
+                    <td key={colIndex} className="py-3 px-4">
+                      {/* ✅ Support custom render */}
+                      {col.render
+                        ? col.render(event[col.accessor], event)
+                        : event[col.accessor]}
+                    </td>
+                  ))}
+
+                  {/* ✅ Action Button */}
                   <td className="py-3 px-4">
                     <button
                       onClick={() => onEventClick(event)}
@@ -78,10 +76,9 @@ export default function EventsTable({
         )}
       </div>
 
-      {/* Pagination Controls */}
+      {/* ✅ Pagination Controls */}
       {hasEvents && (
         <div className="flex justify-start items-center mt-6 space-x-2">
-          {/* Previous Button */}
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             className={`py-2 px-4 rounded-lg transition-all duration-300 border
@@ -96,7 +93,6 @@ export default function EventsTable({
             Previous
           </button>
 
-          {/* Page Numbers */}
           <div className="flex space-x-2">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
               <button
@@ -115,7 +111,6 @@ export default function EventsTable({
             ))}
           </div>
 
-          {/* Next Button */}
           <button
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
