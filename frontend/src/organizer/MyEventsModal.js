@@ -274,40 +274,46 @@ export default function MyEventsModal({
         {error && <p className="text-red-500 text-center mt-4">{error}</p>}
 
         {/* Action Buttons */}
-        <div className="mt-6 flex justify-between">
-          {isEditing ? (
-            <>
-              <button
-                onClick={handleEdit}
-                className="bg-black text-white py-2 px-6 rounded-lg hover:bg-gray-700 transition"
-                disabled={isLoading}
-              >
-                {isLoading ? "Saving..." : "Save Changes"}
-              </button>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="bg-gray-200 text-black py-2 px-6 rounded-lg hover:bg-gray-300 transition"
-              >
-                Cancel Edit
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition"
-              >
-                Edit
-              </button>
-              <button
-                onClick={handleDelete}
-                className="bg-red-600 text-white py-2 px-6 rounded-lg hover:bg-red-700 transition"
-              >
-                Delete
-              </button>
-            </>
-          )}
-        </div>
+     {/* Action Buttons */}
+<div className="mt-6 flex justify-between">
+  {isEditing ? (
+    <>
+      <button
+        onClick={handleEdit}
+        className={`bg-black text-white py-2 px-6 rounded-lg transition-all duration-300 ease-in-out transform hover:bg-gray-900 hover:scale-105 hover:shadow-lg ${
+          isLoading ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+        disabled={isLoading}
+      >
+        {isLoading ? "Saving..." : "Save Changes"}
+      </button>
+
+      <button
+        onClick={() => setIsEditing(false)}
+        className="bg-white text-black border border-black py-2 px-6 rounded-lg transition-all duration-300 ease-in-out transform hover:bg-gray-100 hover:scale-105 hover:shadow-lg"
+      >
+        Cancel Edit
+      </button>
+    </>
+  ) : (
+    <>
+      <button
+        onClick={() => setIsEditing(true)}
+        className="bg-black text-white py-2 px-6 rounded-lg transition-all duration-300 ease-in-out transform hover:bg-gray-900 hover:scale-105 hover:shadow-lg"
+      >
+        Edit
+      </button>
+
+      <button
+        onClick={handleDelete}
+        className="bg-red-600 text-white py-2 px-6 rounded-lg transition-all duration-300 ease-in-out transform hover:bg-red-700 hover:scale-105 hover:shadow-lg"
+      >
+        Delete
+      </button>
+    </>
+  )}
+</div>
+
       </div>
     </div>
   );
