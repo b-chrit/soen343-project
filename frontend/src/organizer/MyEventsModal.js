@@ -274,7 +274,6 @@ export default function MyEventsModal({
         {error && <p className="text-red-500 text-center mt-4">{error}</p>}
 
         {/* Action Buttons */}
-     {/* Action Buttons */}
 <div className="mt-6 flex justify-between">
   {isEditing ? (
     <>
