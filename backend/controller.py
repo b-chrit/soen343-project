@@ -646,15 +646,26 @@ def get_all_users():
         for user in users:
             if user.get_type() == 'admin':  # ✅ Skip admins
                 continue
-            user_data.append({
+
+            # Prepare base user data
+            user_info = {
                 'id': user.get_id(),
                 'first_name': user.get_first_name(),
                 'last_name': user.get_last_name(),
                 'email': user.get_email(),
                 'type': user.get_type()
-            })
+            }
+
+            # Add extra fields for specific types of users
+            if user.get_type() == 'organizer':
+                organizer = Organizer.find(session, user_id=user.get_id())
+                user_info['organization_name'] = organizer.get_organization_name()
+                user_info['phone_number'] = organizer.get_phone_number()
+            
+            user_data.append(user_info)
 
         return jsonify(user_data), 200
+
     
 # -----------------------
 # ✅ Delete Event Endpoint
@@ -744,6 +755,41 @@ def get_organizer_events():
             })
 
         return jsonify(event_data), 200
+
+# -----------------------
+# ✅ Get Registrations Over Time for Event
+# -----------------------
+@app.route("/get_event_registration_over_time", methods=["GET"])
+@jwt_required()  # JWT is required to access this endpoint
+def get_event_registration_over_time():
+    user_id = int(get_jwt_identity())  # Get the user ID from the JWT token
+    event_id = request.args.get('event_id')  # Get the event_id from the query parameters
+    group_by = request.args.get('group_by', 'day')  # Default is 'day'
+
+    # Ensure event_id is provided
+    if not event_id:
+        return {'error': 'Missing event_id parameter'}, 400
+
+    try:
+        event_id = int(event_id)  # Convert to integer to prevent injection attacks
+    except ValueError:
+        return {'error': 'Invalid event_id format'}, 400
+
+    # Ensure group_by is a valid value
+    if group_by not in ['day', 'week', 'month', 'hour', 'minute']:
+        return {'error': 'Invalid group_by value'}, 400
+
+    with SQLSession() as session:
+        # Fetch the event to ensure it exists
+        event = Event.find(session, event_id=event_id)
+        if not event:
+            return {'error': 'Event not found'}, 404
+
+        # Retrieve registrations over time for the event
+        registrations_data = Registration.get_registrations_for_event(session, event_id, group_by)
+
+        return jsonify({'event_id': event_id, 'registrations_over_time': registrations_data}), 200
+
 
 
 # -------------------------------------------------

@@ -199,7 +199,7 @@ const EventCard = ({ title, date, location, registrations, navigate }) => (
     </div>
     <div className="flex justify-end mt-6">
       <button
-        onClick={() => navigate("/events")}
+        onClick={() => navigate("/my-events")}
         className="bg-black text-white py-2 px-6 rounded-lg text-sm transition-all duration-300 hover:bg-white hover:text-black border border-black hover:scale-105"
       >
         Manage

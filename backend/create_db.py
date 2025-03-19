@@ -1,19 +1,21 @@
 from models.config import Base, engine
 from models import Event, SQLSession
 from datetime import datetime, timedelta
-from models.users import User, Organizer, Stakeholder
+from models.users import User, Organizer, Stakeholder, Attendee
 
 # ✅ Create all tables
 Base.metadata.create_all(engine)
 
 with SQLSession() as session:
+
     # ✅ Create and add 10 attendees
     attendees = [
-        User(f'attendee{i}@example.com', f'password{i}', f'John{i}', f'Doe{i}')
+        Attendee(f'attendee{i}@example.com', f'password{i}', f'John{i}', f'Doe{i}')
         for i in range(1, 11)
     ]
     for attendee in attendees:
         User.add(session, attendee)
+
 
     # ✅ Create and add 10 organizers
     organizers = [
@@ -28,8 +30,11 @@ with SQLSession() as session:
         Organizer('organizer9@example.com', 'password9', 'Ian', 'Moore', 'HealthTech Ltd.', '+1 (514) 555-6677'),
         Organizer('organizer10@example.com', 'password10', 'Jack', 'Taylor', 'SmartCity Innovations', '+1 (514) 555-7788'),
     ]
+
+    # Add to the session
     for organizer in organizers:
         User.add(session, organizer)
+
 
     # ✅ Create and add 10 stakeholders (sponsors)
     stakeholders = [

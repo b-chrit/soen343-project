@@ -3,7 +3,7 @@ import { ChevronLeft } from "lucide-react";
 import HeaderBar from "../HeaderBar";
 import EventsTable from "../EventsTable";
 import SearchAndFilter from "../SearchAndFilter";
-import MyEventsModal from "./MyEventsModal"; // Import the modal component
+import MyEventsModal from "./MyEventsModal";
 import { useNavigate } from "react-router-dom";
 
 const eventsPerPage = 5;
@@ -29,80 +29,10 @@ export default function MyEvents() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState(null); // To store selected event for modal
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   const userType = localStorage.getItem("user_type");
 
-  const resetFilters = () => {
-    setSearchQuery("");
-    setSelectedCategory("");
-    setSelectedDate("");
-    setSelectedTime("");
-    setFilteredEvents(eventsData);
-  };
-
-  const fetchMyEvents = async () => {
-    setLoading(true);
-    const token = localStorage.getItem("token");
-  
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-  
-    try {
-      const response = await fetch("http://localhost:5003/get_organizer_events", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
-      if (!response.ok) {
-        throw new Error("Failed to fetch your events");
-      }
-  
-      const data = await response.json();
-      const mappedEvents = data.map((event) => {
-        const start = event.start || "";
-        const end = event.end || "";
-        const date = start.split(" ")[0] || "N/A";
-        const time = start.split(" ")[1] || "N/A";
-        const categoryColor =
-          categoryColors[event.category] || "bg-gray-100 text-gray-800";
-  
-        // Format dates for `datetime-local` input
-        const formattedStart = new Date(start).toISOString().slice(0, 16); // Format as YYYY-MM-DDTHH:mm
-        const formattedEnd = new Date(end).toISOString().slice(0, 16); // Format as YYYY-MM-DDTHH:mm
-  
-        return {
-          id: event.id,
-          title: event.title,
-          category: event.category || "N/A",
-          categoryColor,
-          date,
-          time,
-          start: formattedStart, // Store formatted start date
-          end: formattedEnd, // Store formatted end date
-          sponsored: event.sponsor_name ? "Yes" : "No",
-          sponsor: event.sponsor_name || "None",
-          capacity: event.capacity || "N/A",
-          registrations: event.registrations || 0,
-          location: event.location,
-          description: event.description,
-        };
-      });
-  
-      setEventsData(mappedEvents);
-      setFilteredEvents(mappedEvents);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
   useEffect(() => {
     fetchMyEvents();
   }, [navigate]);
@@ -131,12 +61,79 @@ export default function MyEvents() {
     setFilteredEvents(filtered);
   }, [searchQuery, selectedCategory, selectedDate, selectedTime, eventsData]);
 
+  const fetchMyEvents = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5003/get_organizer_events", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch your events");
+      }
+
+      const data = await response.json();
+
+      const mappedEvents = data.map((event) => {
+        const start = event.start || "";
+        const end = event.end || "";
+        const date = start.split(" ")[0] || "N/A";
+        const time = start.split(" ")[1] || "N/A";
+        const categoryColor =
+          categoryColors[event.category] || "bg-gray-100 text-gray-800";
+
+        const formattedStart = new Date(start).toISOString().slice(0, 16);
+        const formattedEnd = new Date(end).toISOString().slice(0, 16);
+
+        return {
+          id: event.id,
+          title: event.title,
+          category: event.category || "N/A",
+          categoryColor,
+          date,
+          time,
+          start: formattedStart,
+          end: formattedEnd,
+          sponsored: event.sponsor_name ? "Yes" : "No",
+          sponsor: event.sponsor_name || "None",
+          capacity: event.capacity || "N/A",
+          registrations: event.registrations || 0,
+          location: event.location,
+          description: event.description,
+        };
+      });
+
+      setEventsData(mappedEvents);
+      setFilteredEvents(mappedEvents);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("");
+    setSelectedDate("");
+    setSelectedTime("");
+    setFilteredEvents(eventsData);
+  };
+
   const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
   const startIndex = (currentPage - 1) * eventsPerPage;
-  const displayedEvents = filteredEvents.slice(
-    startIndex,
-    startIndex + eventsPerPage
-  );
+  const displayedEvents = filteredEvents.slice(startIndex, startIndex + eventsPerPage);
 
   const handleEventClick = (event) => {
     setSelectedEvent(event);
@@ -144,7 +141,7 @@ export default function MyEvents() {
 
   const handleDeleteEvent = (eventId) => {
     setEventsData(eventsData.filter((event) => event.id !== eventId));
-    setSelectedEvent(null); // Close the modal after deleting
+    setSelectedEvent(null);
   };
 
   const handleEditEvent = (updatedEvent) => {
@@ -152,11 +149,12 @@ export default function MyEvents() {
       event.id === updatedEvent.id ? updatedEvent : event
     );
     setEventsData(updatedEvents);
-    setSelectedEvent(null); // Close the modal after editing
+    setSelectedEvent(null);
   };
 
   return (
     <div className="min-h-screen bg-white flex flex-col relative">
+      {/* ✅ Header */}
       <HeaderBar
         menuOptions={[
           { label: "EVENTS", onClick: () => navigate("/events") },
@@ -172,16 +170,23 @@ export default function MyEvents() {
         ]}
       />
 
-      <div className="px-10 py-6">
-        <div className="flex items-center space-x-4 mb-6">
-          <button onClick={() => navigate(-1)} className="p-2">
+      {/* ✅ Page Title & Back */}
+      <div className="px-10 py-8 flex-1">
+        <div className="flex items-center space-x-4 mb-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-full border border-black hover:bg-black hover:text-white transition"
+          >
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-2xl font-bold uppercase">My Events</h1>
+          <h1 className="text-3xl font-bold uppercase tracking-wide">
+            My Events
+          </h1>
         </div>
 
-        <div className="flex justify-between items-center mb-4">
-          <div></div> {/* Placeholder since there is no toggle button */}
+        {/* ✅ Search and Filter */}
+        <div className="flex justify-between items-center mb-6">
+          <div></div>
           <SearchAndFilter
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -195,9 +200,11 @@ export default function MyEvents() {
           />
         </div>
 
-        {loading && <p>Loading your events...</p>}
+        {/* ✅ Loading and Error */}
+        {loading && <p className="text-gray-500">Loading your events...</p>}
         {error && <p className="text-red-500">{error}</p>}
 
+        {/* ✅ Events Table */}
         {!loading && !error && (
           <EventsTable
             events={displayedEvents}
@@ -230,6 +237,7 @@ export default function MyEvents() {
         )}
       </div>
 
+      {/* ✅ Modal */}
       {selectedEvent && (
         <MyEventsModal
           event={selectedEvent}
@@ -239,7 +247,8 @@ export default function MyEvents() {
         />
       )}
 
-      <footer className="text-sm text-gray-600 p-4 pl-6 absolute bottom-0 left-0">
+      {/* ✅ Footer */}
+      <footer className="text-sm text-gray-600 p-4 pl-6 border-t border-gray-200">
         LOGGED IN AS: {userType ? userType.toUpperCase() : "UNKNOWN"}
       </footer>
     </div>
