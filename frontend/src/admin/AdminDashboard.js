@@ -64,6 +64,9 @@ export default function AdminDashboard() {
     }
   };
 
+  // Get the user type from localStorage to display in the footer
+  const userType = localStorage.getItem("user_type");
+
   return (
     <div className="min-h-screen bg-white flex flex-col relative">
       {/* ✅ HeaderBar */}
@@ -156,7 +159,7 @@ export default function AdminDashboard() {
 
       {/* Footer */}
       <footer className="text-sm text-gray-600 p-4 pl-6">
-        LOGGED IN AS: Admin
+        LOGGED IN AS: {userType ? userType.toUpperCase() : "UNKNOWN"}
       </footer>
     </div>
   );
