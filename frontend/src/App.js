@@ -10,6 +10,7 @@ import Register from "./Register";
 import MyEvents from "./organizer/MyEvents";
 import AnalyticsPage from "./organizer/AnalyticsPage";  // Import the AnalyticsPage component
 import UserManagement  from "./admin/UserManagement ";
+import AdminEventsPage from "./admin/AdminEventsPage";
 
 export default function App() {
   const navigate = useNavigate();
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/events" element={isAuthenticated ? <EventsPage onBack={handleBack} /> : <Navigate to="/login" />} />
           <Route path="/profile" element={isAuthenticated ? <ProfilePage onBack={handleBack} /> : <Navigate to="/login" />} />
           <Route path="/my-events" element={isAuthenticated ? <MyEvents /> : <Navigate to="/login" />} />
+          <Route path="/admin-events" element={isAuthenticated ? <AdminEventsPage onBack={handleBack} /> : <Navigate to="/login" />} />
           
           {/* ✅ Analytics route for organizer */}
           <Route path="/analytics" element={isAuthenticated && userType === "organizer" ? <AnalyticsPage /> : <Navigate to="/login" />} />
