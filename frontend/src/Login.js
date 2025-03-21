@@ -11,32 +11,37 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     // Validate input fields
     if (!email || !password) {
       setApiError('Please provide both email and password.');
       return;
     }
-
+  
     try {
       const response = await fetch("http://localhost:5003/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+  
       const result = await response.json();
-      console.log('result: ' + result);
+      console.log('Login result:', result);
+  
       if (response.ok) {
         // Save token and user_type in local storage
         localStorage.setItem("token", result.token);
         localStorage.setItem("user_type", result.user_type);
-
+  
         // Console log for verification
         console.log("Logged in user type:", result.user_type);
-
-        // Navigate to dashboard
-        navigate("/dashboard");
+  
+        // Navigate to the correct dashboard
+        if (result.user_type === "admin") {
+          navigate("/admin-dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         setApiError(result.error || "Login failed. Please try again.");
       }
@@ -45,6 +50,7 @@ const Login = () => {
       setApiError("Something went wrong. Please try again later.");
     }
   };
+  
 
   const handleGuestLogin = () => {
     setGuestMessage('You are continuing as a guest');

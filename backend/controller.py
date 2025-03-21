@@ -176,13 +176,23 @@ def profile():
         if not user:
             return {'error': 'User not found'}, 404
 
-        # Return the user's first name, last name, email, and ID without exposing the password
-        return {
+        # Check if the user is an organizer and fetch the additional details
+        user_data = {
             'id': user.get_id(),
             'first_name': user.get_first_name(),
             'last_name': user.get_last_name(),
             'email': user.get_email(),
-        }, 200
+        }
+
+        if user.get_type() == "organizer":
+            # If user is an organizer, fetch additional details like phone number and organization name
+            organizer = Organizer.find(session, user_id=user_id)  # Fetch organizer-specific data
+            if organizer:
+                user_data['phone_number'] = organizer.get_phone_number()
+                user_data['organization_name'] = organizer.get_organization_name()
+
+        return user_data, 200
+
 
 # ----------------------- 
 # ✅ Update Password 
@@ -223,7 +233,7 @@ def update_password():
         return {'status': 'Password updated successfully'}, 200
 
 # ----------------------- 
-# ✅ Update Profile (First Name, Last Name, Email)
+# ✅ Update Profile (First Name, Last Name, Email, Phone Number, Organization Name)
 # ----------------------- 
 @app.route("/update_profile", methods=["PUT"])
 @jwt_required()  # JWT is required to access this endpoint
@@ -234,10 +244,12 @@ def update_profile():
     first_name = data.get('first_name')
     last_name = data.get('last_name')
     email = data.get('email')
+    phone_number = data.get('phone_number')  # New field for organizer
+    organization_name = data.get('organization_name')  # New field for organizer
 
-    # Ensure that all fields are provided
+    # Ensure that basic fields (first_name, last_name, email) are provided
     if not all([first_name, last_name, email]):
-        return {'error': 'Missing fields'}, 400
+        return {'error': 'Missing required fields (first_name, last_name, email)'}, 400
 
     with SQLSession() as session:
         # Fetch user details from the 'User' model
@@ -246,19 +258,29 @@ def update_profile():
         if not user:
             return {'error': 'User not found'}, 404
 
-        # Update the profile with the new details
+        # Update the basic profile details
         user.set_first_name(first_name)
         user.set_last_name(last_name)
         user.set_email(email)
+
+        # If the user is an organizer, update the additional fields
+        if user.get_type() == "organizer":
+            organizer = Organizer.find(session, user_id=user_id)
+            if organizer:
+                if phone_number:
+                    organizer.set_phone_number(phone_number)
+                if organization_name:
+                    organizer.set_organization_name(organization_name)
 
         session.commit()
 
         return {'status': 'Profile updated successfully'}, 200
 
 
-# ----------------------- 
+
+# -----------------------
 # ✅ Get Event (For All Users)
-# ----------------------- 
+# -----------------------
 @app.route("/get_event", methods=["GET"])
 @jwt_required()  # JWT is required to access this endpoint
 def get_event():
@@ -266,64 +288,58 @@ def get_event():
     user_id = int(get_jwt_identity())
 
     with SQLSession() as session:
-        # Check if the user is an organizer first
-        organizer = Organizer.find(session, user_id)
+        user = User.find(session, user_id=user_id)
+        if not user:
+            return {'error': 'User not found'}, 404
 
-        if organizer and organizer.get_type() == 'organizer':
-            event_id = organizer.get_event_id()
-            if event_id:
-                event = Event.find(session, event_id=event_id)
-                if event:
-                    organizer_name = f"{organizer.get_first_name()} {organizer.get_last_name()}"
-                    sponsor_name = None
+        user_type = user.get_type()
 
-                    if event.get_sponsor():
-                        sponsor = Stakeholder.find(session, user_id=event.get_sponsor())
-                        if sponsor:
-                            sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
+        # ✅ Organizer: Get their own events
+        if user_type == 'organizer':
+            events = Event.find(session, user_id=user_id)
 
-                    event_data.append({
-                        'id': event.get_id(),
-                        'title': event.get_title(),
-                        'location': event.get_location(),
-                        'category': event.get_category(),
-                        'description': event.get_description(),
-                        'start': str(event.get_start()),
-                        'end': str(event.get_end()),
-                        'organizer_name': organizer_name,
-                        'sponsor_name': sponsor_name
-                    })
+            if not events:
+                return jsonify([]), 200
 
-            # ✅ Return even if empty
-            return jsonify(event_data), 200
+            if not isinstance(events, list):
+                events = [events]  # Ensure it's iterable
 
-        # If user is attendee or admin, return all public events
-        public_events = Event.find(session)
+        else:
+            # ✅ Admin or Attendee: Get all public events
+            events = Event.find(session)
 
-        if public_events:
-            for event in public_events:
-                organizer = Organizer.find(session, user_id=event.get_organizer())
-                organizer_name = f"{organizer.get_first_name()} {organizer.get_last_name()}"
-                sponsor_name = None
+            if not events:
+                return jsonify([]), 200
 
-                if event.get_sponsor():
-                    sponsor = Stakeholder.find(session, user_id=event.get_sponsor())
-                    if sponsor:
-                        sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
+        # ✅ Prepare event data
+        for event in events:
+            organizer = Organizer.find(session, user_id=event.get_organizer())
+            organizer_name = f"{organizer.get_first_name()} {organizer.get_last_name()}" if organizer else "N/A"
 
-                event_data.append({
-                    'id': event.get_id(),
-                    'title': event.get_title(),
-                    'location': event.get_location(),
-                    'category': event.get_category(),
-                    'description': event.get_description(),
-                    'start': str(event.get_start()),
-                    'end': str(event.get_end()),
-                    'organizer_name': organizer_name,
-                    'sponsor_name': sponsor_name
-                })
+            sponsor_name = None
+            sponsored = "No"
+            if event.get_sponsor():
+                sponsor = Stakeholder.find(session, user_id=event.get_sponsor())
+                if sponsor:
+                    sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
+                    sponsored = "Yes"
 
-        # ✅ Return 200 OK, even if event_data is an empty list
+            event_data.append({
+                'id': event.get_id(),
+                'title': event.get_title(),
+                'description': event.get_description(),
+                'category': event.get_category(),
+                'location': event.get_location(),
+                'start': str(event.get_start()),
+                'end': str(event.get_end()),
+                'capacity': event.get_capacity(),
+                'registrations': event.get_registrations(),
+                'event_type': event.get_event_type(),
+                'organizer_name': organizer_name,
+                'sponsor_name': sponsor_name,
+                'sponsored': sponsored
+            })
+
         return jsonify(event_data), 200
 
 # ----------------------- 
@@ -340,41 +356,48 @@ def create_event():
         "end": None,
         "category": None,
         "location": None,
-        "description": None
+        "description": None,
+        "capacity": None,
+        "event_type": None
     }
 
     data_json = request.get_json()
 
-    # Check if all required fields are provided
+    # Check for missing fields
     if not required_data.keys() <= data_json.keys():
         missing_keys = list(required_data.keys() - data_json.keys())
         return {'error': 'Missing required fields', 'missing': missing_keys}, 400
 
     try:
+        # Copy values
         for data in required_data:
             required_data[data] = data_json[data]
-        required_data['start'] = datetime.strptime(required_data['start'], "%Y-%m-%d %H:%M:%S.%f")
-        required_data['end'] = datetime.strptime(required_data['end'], "%Y-%m-%d %H:%M:%S.%f")
+
+        # ✅ Adjust parsing format
+        required_data['start'] = datetime.strptime(required_data['start'], "%Y-%m-%dT%H:%M")
+        required_data['end'] = datetime.strptime(required_data['end'], "%Y-%m-%dT%H:%M")
+
     except Exception as e:
         return {'error': f'Invalid datetime format: {str(e)}'}, 400
 
-    # Check if the user is an organizer and create the event
     with SQLSession() as session:
         organizer = Organizer.find(session, user_id)
-        if organizer:
-            if organizer.get_type() == 'organizer':
-                organizer.create_event(
-                    session,
-                    title=required_data['title'],
-                    start=required_data['start'],
-                    end=required_data['end'],
-                    category=required_data['category'],
-                    description=required_data['description'],
-                    location=required_data['location']
-                )
-                return {'status': 'success'}, 201
-            return {'error': 'Forbidden'}, 403
-        return {'error': 'Not Authenticated'}, 401
+        if organizer and organizer.get_type() == 'organizer':
+            organizer.create_event(
+                session,
+                title=required_data['title'],
+                start=required_data['start'],
+                end=required_data['end'],
+                category=required_data['category'],
+                description=required_data['description'],
+                location=required_data['location'],
+                capacity=int(required_data['capacity']),
+                event_type=required_data['event_type']
+            )
+            return {'status': 'success'}, 201
+
+        return {'error': 'Forbidden'}, 403
+
     
 
 @app.route('/register_attendee_for_event', methods=['POST'])
@@ -402,17 +425,31 @@ def register_attendee_for_event():
         if not event:
             return {'error': 'Event not found'}, 404
 
-        # Check if the attendee is already registered for this event
-        registration = session.query(Registration).filter_by(attendee_id=user_id, event_id=event_id).first()
-        if registration:
+        # ✅ Check if event has reached capacity
+        if event.get_registrations() >= event.get_capacity():
+            return {'error': 'Event is at full capacity'}, 409
+
+        # ✅ Check if the attendee is already registered
+        existing_registration = session.query(Registration).filter_by(
+            attendee_id=user_id,
+            event_id=event_id
+        ).first()
+
+        if existing_registration:
             return {'error': 'Attendee already registered for this event'}, 409
 
-        # Register the attendee for the event
+        # ✅ Register the attendee for the event
         registration = Registration(attendee_id=user_id, event_id=event_id)
         session.add(registration)
+
+        # ✅ Increment event registrations
+        event.set_registrations(event.get_registrations() + 1)
+
+        # ✅ Commit both changes
         session.commit()
 
     return {'status': 'Registration successful'}, 201
+
 
 
 @app.route('/get_registered_events', methods=['GET'])
@@ -421,38 +458,47 @@ def get_registered_events():
     user_id = int(get_jwt_identity())
 
     with SQLSession() as session:
+        # Fetch all registrations for the current user
         registrations = session.query(Registration).filter_by(attendee_id=user_id).all()
 
         if not registrations:
-            # Return an empty list instead of 404
+            # Return an empty list if no registrations are found
             return jsonify([]), 200
 
         event_data = []
         for registration in registrations:
+            # Fetch event details
             event = Event.find(session, event_id=registration.event_id)
             if event:
+                # Fetch organizer details
                 organizer = Organizer.find(session, user_id=event.get_organizer())
                 organizer_name = f"{organizer.get_first_name()} {organizer.get_last_name()}"
 
+                # Fetch sponsor details (if any)
                 sponsor_name = None
                 if event.get_sponsor():
                     sponsor = Stakeholder.find(session, user_id=event.get_sponsor())
                     if sponsor:
                         sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
 
+                # Add event details to the response data
                 event_data.append({
                     'id': event.get_id(),
                     'title': event.get_title(),
                     'location': event.get_location(),
                     'category': event.get_category(),
                     'description': event.get_description(),
-                    'start': str(event.get_start()),
-                    'end': str(event.get_end()),
+                    'start': str(event.get_start()),  # Convert datetime to string
+                    'end': str(event.get_end()),  # Convert datetime to string
                     'organizer_name': organizer_name,
-                    'sponsor_name': sponsor_name
+                    'sponsor_name': sponsor_name,
+                    'capacity': event.get_capacity(),  # Add capacity
+                    'registrations': event.get_registrations(),  # Add registrations count
+                    'event_type': event.get_event_type()  # Add event type (In-Person or Virtual)
                 })
 
         return jsonify(event_data), 200
+
 
 @app.route('/cancel_registration_for_event', methods=['POST'])
 @jwt_required()
@@ -480,15 +526,27 @@ def cancel_registration_for_event():
             return {'error': 'Event not found'}, 404
 
         # Find the registration to cancel
-        registration = session.query(Registration).filter_by(attendee_id=user_id, event_id=event_id).first()
+        registration = session.query(Registration).filter_by(
+            attendee_id=user_id,
+            event_id=event_id
+        ).first()
+
         if not registration:
             return {'error': 'Attendee is not registered for this event'}, 404
 
-        # Cancel the registration (delete the record)
+        # ✅ Cancel the registration (delete the record)
         session.delete(registration)
+
+        # ✅ Decrement event registrations (ensuring it doesn't go negative)
+        current_registrations = event.get_registrations()
+        if current_registrations > 0:
+            event.set_registrations(current_registrations - 1)
+
+        # ✅ Commit both changes
         session.commit()
 
     return {'status': 'Registration canceled successfully'}, 200
+
 
 @app.route('/check_registration', methods=['GET'])
 @jwt_required()
@@ -588,15 +646,26 @@ def get_all_users():
         for user in users:
             if user.get_type() == 'admin':  # ✅ Skip admins
                 continue
-            user_data.append({
+
+            # Prepare base user data
+            user_info = {
                 'id': user.get_id(),
                 'first_name': user.get_first_name(),
                 'last_name': user.get_last_name(),
                 'email': user.get_email(),
                 'type': user.get_type()
-            })
+            }
+
+            # Add extra fields for specific types of users
+            if user.get_type() == 'organizer':
+                organizer = Organizer.find(session, user_id=user.get_id())
+                user_info['organization_name'] = organizer.get_organization_name()
+                user_info['phone_number'] = organizer.get_phone_number()
+            
+            user_data.append(user_info)
 
         return jsonify(user_data), 200
+
     
 # -----------------------
 # ✅ Delete Event Endpoint
@@ -643,6 +712,85 @@ def delete_event():
         session.commit()
 
     return {'status': 'Event deleted successfully'}, 200
+
+
+@app.route("/get_organizer_events", methods=["GET"])
+@jwt_required()  # JWT is required (Organizer access)
+def get_organizer_events():
+    user_id = int(get_jwt_identity())  # Get the organizer ID from the JWT token
+
+    with SQLSession() as session:
+        # ✅ Validate user is organizer
+        organizer = User.find(session, user_id=user_id)
+        if not organizer or organizer.get_type() != 'organizer':
+            return {'error': 'Access denied'}, 403
+
+        # ✅ Get ALL events created by this organizer
+        events = Event.find_all_by_organizer(session, organizer_id=user_id)
+
+        if not events or len(events) == 0:
+            return jsonify([]), 200  # Return empty list if no events found
+
+        # ✅ Build event data list
+        event_data = []
+        for event in events:
+            sponsor_name = None
+
+            if event.get_sponsor():
+                sponsor = Stakeholder.find(session, user_id=event.get_sponsor())
+                if sponsor:
+                    sponsor_name = f"{sponsor.get_first_name()} {sponsor.get_last_name()}"
+
+            event_data.append({
+                'id': event.get_id(),
+                'title': event.get_title(),
+                'description': event.get_description(),
+                'category': event.get_category(),
+                'location': event.get_location(),
+                'start': str(event.get_start()),
+                'end': str(event.get_end()),
+                'capacity': event.get_capacity(),
+                'registrations': event.get_registrations(),
+                'sponsor_name': sponsor_name
+            })
+
+        return jsonify(event_data), 200
+
+# -----------------------
+# ✅ Get Registrations Over Time for Event
+# -----------------------
+@app.route("/get_event_registration_over_time", methods=["GET"])
+@jwt_required()  # JWT is required to access this endpoint
+def get_event_registration_over_time():
+    user_id = int(get_jwt_identity())  # Get the user ID from the JWT token
+    event_id = request.args.get('event_id')  # Get the event_id from the query parameters
+    group_by = request.args.get('group_by', 'day')  # Default is 'day'
+
+    # Ensure event_id is provided
+    if not event_id:
+        return {'error': 'Missing event_id parameter'}, 400
+
+    try:
+        event_id = int(event_id)  # Convert to integer to prevent injection attacks
+    except ValueError:
+        return {'error': 'Invalid event_id format'}, 400
+
+    # Ensure group_by is a valid value
+    if group_by not in ['day', 'week', 'month', 'hour', 'minute']:
+        return {'error': 'Invalid group_by value'}, 400
+
+    with SQLSession() as session:
+        # Fetch the event to ensure it exists
+        event = Event.find(session, event_id=event_id)
+        if not event:
+            return {'error': 'Event not found'}, 404
+
+        # Retrieve registrations over time for the event
+        registrations_data = Registration.get_registrations_for_event(session, event_id, group_by)
+
+        return jsonify({'event_id': event_id, 'registrations_over_time': registrations_data}), 200
+
+
 
 # -------------------------------------------------
 # ✅ Run the App

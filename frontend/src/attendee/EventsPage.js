@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
-import EventModal from "../EventModal";
+import EventModal from "./EventModal";
 import HeaderBar from "../HeaderBar";
 import SearchAndFilter from "../SearchAndFilter";
 import EventsTable from "../EventsTable";
@@ -33,7 +33,6 @@ export default function EventsPage({ onBack }) {
   const [selectedTime, setSelectedTime] = useState("");
   const [viewingRegistrations, setViewingRegistrations] = useState(false);
 
-  // ✅ Retrieve user type from local storage
   const userType = localStorage.getItem("user_type");
   console.log("Logged in user type:", userType);
 
@@ -88,10 +87,10 @@ export default function EventsPage({ onBack }) {
             time,
             sponsored: event.sponsor_name ? "Yes" : "No",
             sponsor: event.sponsor_name || "N/A",
-            organizer_name: event.organizer_name,
-            sponsor_name: event.sponsor_name,
-            description: event.description,
+            capacity: event.capacity || "N/A", // Ensure this is included
+            registrations: event.registrations || 0,
             location: event.location,
+            description: event.description,
             start: event.start,
             end: event.end,
           };
@@ -145,12 +144,12 @@ export default function EventsPage({ onBack }) {
 
   const fetchRegisteredEvents = async () => {
     const token = localStorage.getItem("token");
-
+  
     if (!token) {
       navigate("/login");
       return;
     }
-
+  
     try {
       const response = await fetch("http://localhost:5003/get_registered_events", {
         method: "GET",
@@ -159,20 +158,20 @@ export default function EventsPage({ onBack }) {
           Authorization: `Bearer ${token}`,
         },
       });
-
+  
       if (!response.ok) {
         throw new Error("Failed to fetch registered events");
       }
-
+  
       const registeredEvents = await response.json();
-
+  
       const mappedRegisteredEvents = registeredEvents.map((event) => {
         const start = event.start;
         const date = start ? start.split(" ")[0] : "N/A";
         const time = start ? start.split(" ")[1] : "N/A";
         const categoryColor =
           categoryColors[event.category] || "bg-gray-100 text-gray-800";
-
+  
         return {
           id: event.id,
           title: event.title,
@@ -189,15 +188,18 @@ export default function EventsPage({ onBack }) {
           location: event.location,
           start: event.start,
           end: event.end,
+          capacity: event.capacity || "N/A", // Adding capacity
+          registrations: event.registrations || 0, // Adding registrations
         };
       });
-
+  
       setRegisteredEvents(mappedRegisteredEvents);
       setViewingRegistrations(true);
     } catch (err) {
       setError(err.message);
     }
   };
+  
 
   const toggleView = () => {
     if (!viewingRegistrations) {
@@ -268,18 +270,7 @@ export default function EventsPage({ onBack }) {
   return (
     <div className="min-h-screen bg-white flex flex-col relative">
       <HeaderBar
-        menuOptions={[
-          { label: "EVENTS", onClick: () => navigate("/events") },
-          { label: "PROFILE", onClick: () => navigate("/profile") },
-          {
-            label: "LOGOUT",
-            onClick: () => {
-              localStorage.removeItem("token");
-              localStorage.removeItem("user_type");
-              navigate("/login");
-            },
-          },
-        ]}
+        menuOptions={[{ label: "EVENTS", onClick: () => navigate("/events") }, { label: "PROFILE", onClick: () => navigate("/profile") }, { label: "LOGOUT", onClick: () => { localStorage.removeItem("token"); localStorage.removeItem("user_type"); navigate("/login"); } }]}
       />
 
       <div className="px-10 py-6">
@@ -295,9 +286,7 @@ export default function EventsPage({ onBack }) {
             onClick={toggleView}
             className="bg-black text-white py-2 px-6 rounded-lg transition-all duration-300 border border-black hover:bg-white hover:text-black hover:scale-105 hover:shadow-md"
           >
-            {viewingRegistrations
-              ? "View All Events"
-              : "View My Registrations"}
+            {viewingRegistrations ? "View All Events" : "View My Registrations"}
           </button>
 
           <SearchAndFilter
@@ -319,6 +308,24 @@ export default function EventsPage({ onBack }) {
         {!loading && !error && (
           <EventsTable
             events={displayedEvents}
+            columns={[
+              { label: "Event", accessor: "title", width: "w-1/5" },
+              { label: "Organizer", accessor: "organizer", width: "w-1/5" },
+              {
+                label: "Category",
+                accessor: "category",
+                width: "w-1/5",
+                render: (value, event) => (
+                  <span className={`px-2 py-1 rounded-lg text-xs ${event.categoryColor}`}>
+                    {value}
+                  </span>
+                ),
+              },
+              { label: "Date", accessor: "date", width: "w-1/5" },
+              { label: "Time", accessor: "time", width: "w-1/5" },
+              { label: "Sponsored", accessor: "sponsored", width: "w-1/5" },
+              { label: "Sponsor", accessor: "sponsor", width: "w-1/5" },
+            ]}
             onEventClick={handleEventClick}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}

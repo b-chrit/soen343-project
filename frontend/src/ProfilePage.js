@@ -13,11 +13,15 @@ export default function ProfilePage({ onBack }) {
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
+    phone_number: "",   // For Organizer
+    organization_name: "", // For Organizer
   });
   const [initialFormData, setInitialFormData] = useState({
     first_name: "",
     last_name: "",
     email: "",
+    phone_number: "",  // For Organizer
+    organization_name: "",  // For Organizer
   });
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -60,6 +64,8 @@ export default function ProfilePage({ onBack }) {
           first_name: userData.first_name,
           last_name: userData.last_name,
           email: userData.email,
+          phone_number: userData.phone_number || "",  // For Organizer
+          organization_name: userData.organization_name || "",  // For Organizer
         });
 
         setFormData({
@@ -69,6 +75,8 @@ export default function ProfilePage({ onBack }) {
           currentPassword: "",
           newPassword: "",
           confirmPassword: "",
+          phone_number: userData.phone_number || "",  // For Organizer
+          organization_name: userData.organization_name || "",  // For Organizer
         });
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -104,6 +112,8 @@ export default function ProfilePage({ onBack }) {
           first_name: formData.first_name,
           last_name: formData.last_name,
           email: formData.email,
+          phone_number: formData.phone_number,   // For Organizer
+          organization_name: formData.organization_name,  // For Organizer
         }),
       });
 

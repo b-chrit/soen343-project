@@ -33,7 +33,9 @@ export default function EventModal({ event, onClose, updateEvents }) {
       });
 
       if (!response.ok) {
-        throw new Error(isRegistered ? "Failed to cancel registration" : "Failed to register for event");
+        // If response is not OK, we capture the error message from the response
+        const errorData = await response.json();
+        throw new Error(errorData.error || "An unknown error occurred");
       }
 
       setIsSuccess(true);
@@ -47,7 +49,7 @@ export default function EventModal({ event, onClose, updateEvents }) {
         onClose();
       }, 2000);
     } catch (err) {
-      setError(err.message);
+      setError(err.message);  // Display the error message returned by the backend
     } finally {
       setIsLoading(false);
     }
@@ -69,8 +71,8 @@ export default function EventModal({ event, onClose, updateEvents }) {
         {/* Event Title */}
         <h2 className="text-3xl font-bold text-black">{event.title}</h2>
 
-        {/* Event Category */}
-        <p className={`mt-3 text-sm px-4 py-2 ${event.color || "bg-blue-100 text-blue-800"} rounded-md inline-block`}>
+        {/* Event Category Badge */}
+        <p className={`mt-3 text-sm px-4 py-2 rounded-md inline-block ${event.categoryColor || "bg-gray-100 text-gray-800"}`}>
           {event.category}
         </p>
 
@@ -78,23 +80,31 @@ export default function EventModal({ event, onClose, updateEvents }) {
         <div className="mt-6 grid grid-cols-2 gap-6 text-gray-700 text-sm">
           <div>
             <p className="font-semibold">Start:</p>
-            <p>{new Date(event.start).toLocaleString()}</p>
+            <p>{event.start ? new Date(event.start).toLocaleString() : "N/A"}</p>
           </div>
           <div>
             <p className="font-semibold">End:</p>
-            <p>{new Date(event.end).toLocaleString()}</p>
+            <p>{event.end ? new Date(event.end).toLocaleString() : "N/A"}</p>
           </div>
           <div>
             <p className="font-semibold">Location:</p>
-            <p>{event.location}</p>
+            <p>{event.location || "N/A"}</p>
           </div>
           <div>
             <p className="font-semibold">Organizer:</p>
-            <p>{event.organizer_name || "Not available"}</p>
+            <p>{event.organizer_name || "N/A"}</p>
           </div>
           <div>
             <p className="font-semibold">Sponsor:</p>
-            <p>{event.sponsor_name || "Not available"}</p>
+            <p>{event.sponsor_name || "None"}</p>
+          </div>
+          <div>
+            <p className="font-semibold">Capacity:</p>
+            <p>{event.capacity || "N/A"}</p>
+          </div>
+          <div>
+            <p className="font-semibold">Registrations:</p>
+            <p>{event.registrations || 0}</p>
           </div>
         </div>
 
@@ -110,21 +120,20 @@ export default function EventModal({ event, onClose, updateEvents }) {
             disabled={isLoading}
             className={`py-3 px-8 font-medium rounded-lg border transition-all duration-300 
               ${isLoading
-                ? "bg-gray-300 cursor-not-allowed border-gray-300 text-gray-500"
-                : isRegistered
-                ? "bg-red-600 text-white border-red-600 hover:bg-white hover:text-red-600"
-                : "bg-black text-white border-black hover:bg-white hover:text-black"}
-              `}
+              ? "bg-gray-300 cursor-not-allowed border-gray-300 text-gray-500"
+              : isRegistered
+              ? "bg-red-600 text-white border-red-600 hover:bg-white hover:text-red-600"
+              : "bg-black text-white border-black hover:bg-white hover:text-black"}`}
           >
             {isLoading
               ? "Processing..."
               : isRegistered
-              ? "CANCEL REGISTRATION"
-              : "REGISTER FOR EVENT"}
+                ? "CANCEL REGISTRATION"
+                : "REGISTER FOR EVENT"}
           </button>
         </div>
 
-        {/* Show Success Message */}
+        {/* Success Message */}
         {isSuccess && (
           <div className="mt-6 text-center text-green-600 animate__animated animate__fadeIn">
             <CheckCircle className="w-16 h-16 mx-auto text-green-600" />
@@ -133,13 +142,13 @@ export default function EventModal({ event, onClose, updateEvents }) {
             </p>
             <p>
               {isRegistered
-                ? "Your registration for the event was completed successfully."
+                ? "You have successfully registered for this event."
                 : "Your registration has been canceled."}
             </p>
           </div>
         )}
 
-        {/* Show Error Message */}
+        {/* Error Message */}
         {error && <p className="text-red-500 text-center mt-4">{error}</p>}
       </div>
     </div>
