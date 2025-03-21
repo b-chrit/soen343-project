@@ -108,7 +108,7 @@ export default function AdminDashboard() {
         <ActionCard
           label="Manage Events"
           icon={<CalendarPlus className="w-8 h-8" />}
-          onClick={() => navigate("/manage-events")}
+          onClick={() => navigate("/admin-events")}
         />
         <ActionCard
           label="Manage Payments"
