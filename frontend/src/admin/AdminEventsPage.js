@@ -266,6 +266,19 @@ export default function AdminEventsPage({ onBack }) {
     setFilteredEvents(registeredEvents);
   };
 
+  const handleDeleteEvent = (eventId) => {
+    setEventsData(eventsData.filter((event) => event.id !== eventId));
+    setSelectedEvent(null);
+  };
+
+  const handleEditEvent = (updatedEvent) => {
+    const updatedEvents = eventsData.map((event) =>
+      event.id === updatedEvent.id ? updatedEvent : event
+    );
+    setEventsData(updatedEvents);
+    setSelectedEvent(null);
+  };
+
   const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
   const startIndex = (currentPage - 1) * eventsPerPage;
   const displayedEvents = filteredEvents.slice(
@@ -350,7 +363,8 @@ export default function AdminEventsPage({ onBack }) {
         <AdminEventModal
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
-          updateEvents={updateEvents}
+          onDeleteEvent={handleDeleteEvent}
+          onEditEvent={handleEditEvent}
         />
       )}
 
