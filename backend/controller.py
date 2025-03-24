@@ -634,16 +634,20 @@ def get_all_users():
     user_id = int(get_jwt_identity())
 
     with SQLSession() as session:
-        # ✅ Check if the requester is an admin
+        # Check if the requester is an admin
         admin = User.find(session, user_id=user_id)
         if not admin or admin.get_type() != 'admin':
             return {'error': 'Access denied'}, 403
 
-        # ✅ Fetch all users (INCLUDING ADMINS)
+        # Fetch all users
         users = User.find(session)
 
         user_data = []
         for user in users:
+            if user.get_type() == 'admin':  # ✅ Skip admins
+                continue
+
+            # Prepare base user data
             user_info = {
                 'id': user.get_id(),
                 'first_name': user.get_first_name(),
