@@ -292,7 +292,9 @@ export default function AdminEventsPage({ onBack }) {
         menuOptions={[
           { label: "EVENTS", onClick: () => navigate("/events") },
           { label: "PROFILE", onClick: () => navigate("/profile") },
+          { label: "ACCOUNTS", onClick: () => navigate("/accountsTable") },
           {
+
             label: "LOGOUT",
             onClick: () => {
               localStorage.removeItem("token");

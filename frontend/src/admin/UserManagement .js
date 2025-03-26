@@ -146,6 +146,7 @@ export default function UserManagement() {
         menuOptions={[
           { label: "EVENTS", onClick: () => navigate("/events") },
           { label: "PROFILE", onClick: () => navigate("/profile") },
+          { label: "ACCOUNTS", onClick: () => navigate("/accountsTable") },
           {
             label: "LOGOUT",
             onClick: () => {
@@ -184,6 +185,8 @@ export default function UserManagement() {
     <option value="attendee">Attendee</option>
     <option value="organizer">Organizer</option>
     <option value="stakeholder">Stakeholder</option>
+    <option value="Admin">Administrator</option>
+
   </select>
   {/* Chevron Icon */}
   <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-black">
