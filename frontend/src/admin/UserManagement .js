@@ -43,7 +43,7 @@ export default function UserManagement() {
     }
 
     try {
-      const response = await fetch("http://localhost:5003/get_all_users", {
+      const response = await fetch("http://localhost:5003/admin/get_users", {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -74,17 +74,17 @@ export default function UserManagement() {
       user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.type.toLowerCase().includes(searchQuery.toLowerCase())
+      user.user_type.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     if (selectedCategory) {
       filtered = filtered.filter((user) =>
-        user.type.toLowerCase().includes(selectedCategory.toLowerCase())
+        user.user_type.toLowerCase().includes(selectedCategory.toLowerCase())
       );
     }
 
     filtered = filtered.filter(
-      (user) => user.type.toLowerCase() === userTypeFilter.toLowerCase()
+      (user) => user.user_type.toLowerCase() === userTypeFilter.toLowerCase()
     );
 
     const newTotalPages = Math.ceil(filtered.length / usersPerPage);
@@ -97,6 +97,7 @@ export default function UserManagement() {
 
   // Open Delete Modal
   const handleDeleteClick = (user) => {
+    console.log(user);
     setSelectedUser(user);
     setShowModal(true);
     setIsSuccess(false); // Reset success message every time we open a fresh modal
@@ -106,7 +107,8 @@ export default function UserManagement() {
   const handleDeleteConfirm = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5003/delete_user", {
+      console.log(selectedUser);
+      const response = await fetch("http://localhost:5003/admin/delete_user", {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

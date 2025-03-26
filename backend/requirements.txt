@@ -1,6 +1,8 @@
 flask-jwt-extended
+flask-restful
 SQLAlchemy
 flask-cors
+stripe
 dotenv
 bcrypt
 flask

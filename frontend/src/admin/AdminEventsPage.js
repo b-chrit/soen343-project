@@ -55,7 +55,7 @@ export default function AdminEventsPage({ onBack }) {
           return;
         }
 
-        const response = await fetch("http://localhost:5003/get_event", {
+        const response = await fetch("http://localhost:5003/event/get", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -156,7 +156,7 @@ export default function AdminEventsPage({ onBack }) {
 
     try {
       const response = await fetch(
-        "http://localhost:5003/get_registered_events",
+        "http://localhost:5003/attendee/get_events",
         {
           method: "GET",
           headers: {
@@ -225,8 +225,9 @@ export default function AdminEventsPage({ onBack }) {
     }
 
     try {
+      console.log(event.id);
       const response = await fetch(
-        `http://localhost:5003/check_registration?event_id=${event.id}`,
+        `http://localhost:5003/event/check_registration?event_id=${event.id}`,
         {
           method: "GET",
           headers: {

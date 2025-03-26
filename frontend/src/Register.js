@@ -19,7 +19,7 @@ const Register = () => {
 
   const navigate = useNavigate();
 
-  const roles = ["Administrator", "Attendee", "Organizer", "Stakeholder"];
+  const roles = ["Admin", "Attendee", "Organizer", "Stakeholder"];
 
   const handleRoleSelect = (selectedRole) => {
     setRole(selectedRole);
@@ -63,7 +63,7 @@ const Register = () => {
         payload.phone_number = phoneNumber;
       }
       console.log("Payload: " + payload.user_type)
-      const response = await fetch("http://localhost:5003/register_user", {
+      const response = await fetch("http://localhost:5003/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -1,11 +1,19 @@
 import { useState } from "react";
+import { ClipLoader } from 'react-spinners';
 import { CheckCircle, XCircle } from "lucide-react";
+import EventDescription from "./EventDescription";
+import EventPayment from "./EventPayment";
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+
 
 export default function EventModal({ event, onClose, updateEvents }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isRegistered, setIsRegistered] = useState(event.isRegistered);
+
+  const [isInPayment, setIsInPayment] = useState(false)
+  const [clientSecret, setClientSecret] = useState(null);
 
   const handleRegistration = async () => {
     setIsLoading(true);
@@ -20,8 +28,8 @@ export default function EventModal({ event, onClose, updateEvents }) {
 
     try {
       const url = isRegistered
-        ? "http://localhost:5003/cancel_registration_for_event"
-        : "http://localhost:5003/register_attendee_for_event";
+        ? "http://localhost:5003/event/deregister"
+        : "http://localhost:5003/event/register";
 
       const response = await fetch(url, {
         method: "POST",
@@ -29,26 +37,48 @@ export default function EventModal({ event, onClose, updateEvents }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ event_id: event.id }),
+        body: JSON.stringify(
+          { 
+            event_id : event.id,
+            ...(clientSecret && { client_secret : clientSecret })
+          }
+        ),
       });
 
       if (!response.ok) {
-        // If response is not OK, we capture the error message from the response
         const errorData = await response.json();
         throw new Error(errorData.error || "An unknown error occurred");
       }
+      const data = await response.json();
+      console.log(data);
 
-      setIsSuccess(true);
-      setIsRegistered(!isRegistered);
+      if (data.status == 'payment_required'){
+        setClientSecret(data.client_secret);
+        setIsInPayment(true);
+      }
+      if (data.status == 'registered'){
+        setIsSuccess(true);
+        setIsRegistered(true);
+        setClientSecret(false);
+        
+        if (updateEvents) {
+          updateEvents(event.id, !isRegistered);
+        }
+        setIsInPayment(false);
 
-      if (updateEvents) {
-        updateEvents(event.id, !isRegistered);
+        const timer = setTimeout(() => {
+          setIsSuccess(false);
+        }, 2000);
+      }
+      if (data.status == 'cancelled'){
+        setIsRegistered(false)
+        if (updateEvents) {
+          updateEvents(event.id, !isRegistered);
+        }
       }
 
-      setTimeout(() => {
-        onClose();
-      }, 2000);
     } catch (err) {
+      console.log("Error : "+err);
       setError(err.message);  // Display the error message returned by the backend
     } finally {
       setIsLoading(false);
@@ -57,10 +87,31 @@ export default function EventModal({ event, onClose, updateEvents }) {
 
   if (!event) return null;
 
+  if (isSuccess) return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-8 w-full max-w-3xl h-[600px] rounded-lg relative flex flex-col shadow-lg border border-gray-300">
+        <div className="w-full h-full flex align-center items-center justify-center">
+          <DotLottieReact className="w-[200px] f-[200px]" src="/success_animation.json" autoplay />
+        </div>
+      </div>
+    </div>
+    
+    
+  )
+
+  if (isLoading) return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-8 w-full max-w-3xl h-[600px] rounded-lg relative flex flex-col shadow-lg border border-gray-300">
+        <div className="w-full h-full flex align-center items-center justify-center">
+          <ClipLoader size={100} color="#000" loading={isLoading} />
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-8 w-full max-w-3xl rounded-lg relative shadow-lg border border-gray-300">
-        {/* Close Button */}
+      <div className="bg-white p-8 w-full max-w-3xl h-[600px] rounded-lg relative flex flex-col shadow-lg border border-gray-300">
         <button
           onClick={onClose}
           className="absolute top-3 right-4 text-3xl font-bold text-gray-600 hover:text-black transition"
@@ -68,72 +119,21 @@ export default function EventModal({ event, onClose, updateEvents }) {
           &times;
         </button>
 
-        {/* Event Title */}
-        <h2 className="text-3xl font-bold text-black">{event.title}</h2>
-
-        {/* Event Category Badge */}
-        <p className={`mt-3 text-sm px-4 py-2 rounded-md inline-block ${event.categoryColor || "bg-gray-100 text-gray-800"}`}>
-          {event.category}
-        </p>
-
-        {/* Event Details */}
-        <div className="mt-6 grid grid-cols-2 gap-6 text-gray-700 text-sm">
-          <div>
-            <p className="font-semibold">Start:</p>
-            <p>{event.start ? new Date(event.start).toLocaleString() : "N/A"}</p>
-          </div>
-          <div>
-            <p className="font-semibold">End:</p>
-            <p>{event.end ? new Date(event.end).toLocaleString() : "N/A"}</p>
-          </div>
-          <div>
-            <p className="font-semibold">Location:</p>
-            <p>{event.location || "N/A"}</p>
-          </div>
-          <div>
-            <p className="font-semibold">Organizer:</p>
-            <p>{event.organizer_name || "N/A"}</p>
-          </div>
-          <div>
-            <p className="font-semibold">Sponsor:</p>
-            <p>{event.sponsor_name || "None"}</p>
-          </div>
-          <div>
-            <p className="font-semibold">Capacity:</p>
-            <p>{event.capacity || "N/A"}</p>
-          </div>
-          <div>
-            <p className="font-semibold">Registrations:</p>
-            <p>{event.registrations || 0}</p>
-          </div>
+        <div className="w-full h-full">
+          {isInPayment ? (
+            <EventPayment event={event} clientSecret={clientSecret} isLoading={isLoading} handleRegistration={handleRegistration} />
+          ) : (
+            <EventDescription 
+              event={event} 
+              isRegistered={isRegistered} 
+              setIsRegistered={setIsRegistered} 
+              isLoading={isLoading} 
+              handleRegistration={handleRegistration} 
+            />
+          )}
         </div>
 
-        {/* Event Description */}
-        <p className="mt-6 text-gray-800 leading-relaxed">
-          <strong>Description:</strong> {event.description || "No additional details available for this event."}
-        </p>
-
-        {/* Register / Cancel Button */}
-        <div className="flex justify-center mt-8">
-          <button
-            onClick={handleRegistration}
-            disabled={isLoading}
-            className={`py-3 px-8 font-medium rounded-lg border transition-all duration-300 
-              ${isLoading
-              ? "bg-gray-300 cursor-not-allowed border-gray-300 text-gray-500"
-              : isRegistered
-              ? "bg-red-600 text-white border-red-600 hover:bg-white hover:text-red-600"
-              : "bg-black text-white border-black hover:bg-white hover:text-black"}`}
-          >
-            {isLoading
-              ? "Processing..."
-              : isRegistered
-                ? "CANCEL REGISTRATION"
-                : "REGISTER FOR EVENT"}
-          </button>
-        </div>
-
-        {/* Success Message */}
+        {/* Success Message
         {isSuccess && (
           <div className="mt-6 text-center text-green-600 animate__animated animate__fadeIn">
             <CheckCircle className="w-16 h-16 mx-auto text-green-600" />
@@ -146,7 +146,7 @@ export default function EventModal({ event, onClose, updateEvents }) {
                 : "Your registration has been canceled."}
             </p>
           </div>
-        )}
+        )} */}
 
         {/* Error Message */}
         {error && <p className="text-red-500 text-center mt-4">{error}</p>}

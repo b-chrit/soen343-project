@@ -10,6 +10,7 @@ export default function CreateEventModal({ show, onClose, onSubmit }) {
     location: "",
     capacity: "",
     event_type: "",
+    registration_fee:"0"
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -37,7 +38,7 @@ export default function CreateEventModal({ show, onClose, onSubmit }) {
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch("http://localhost:5003/create_event", {
+      const response = await fetch("http://localhost:5003/event/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

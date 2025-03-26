@@ -20,6 +20,8 @@ export default function AdminEventModal({
     location: event.location,
     description: event.description,
     capacity: event.capacity,
+    registration_fee: event.fee,
+    event_type : event.event_type
   });
 
   const navigate = useNavigate();
@@ -34,7 +36,7 @@ export default function AdminEventModal({
         return;
       }
 
-      const response = await fetch("http://localhost:5003/edit_event", {
+      const response = await fetch("http://localhost:5003/event/edit", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -71,7 +73,7 @@ export default function AdminEventModal({
         return;
       }
 
-      const response = await fetch("http://localhost:5003/delete_event", {
+      const response = await fetch("http://localhost:5003/event/delete", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -109,6 +111,8 @@ export default function AdminEventModal({
         location: event.location,
         description: event.description,
         capacity: event.capacity,
+        registration_fee: event.fee,
+        event_type : event.event_type
       });
     }
   }, [isEditing, event]);
