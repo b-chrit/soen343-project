@@ -13,7 +13,7 @@ import MyEvents from "./organizer/MyEvents";
 import AnalyticsPage from "./organizer/AnalyticsPage";
 import UserManagement from "./admin/UserManagement ";
 import AdminEventsPage from "./admin/AdminEventsPage";
-import AccountsTable from "./admin/AccountsTable"; //Import accountsTable component
+import AccountsTable from "./admin/AccountsTable"; 
 
 export default function App() {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ export default function App() {
           <Route path="/stakeholder-dashboard" element={isAuthenticated && userType === "stakeholder" ? <StakeholderDashboard /> : <Navigate to="/login" />} />
           <Route path="/admin-dashboard" element={isAuthenticated && userType === "admin" ? <AdminDashboard /> : <Navigate to="/login" />} />
           <Route path="/manage-users" element={isAuthenticated && userType === "admin" ? <UserManagement /> : <Navigate to="/login" />} />
-          <Route path="/calendar" element={isAuthenticated ? <CalendarView /> : <Navigate to="/login" />} />
+          <Route path="/calendar" element={isAuthenticated ? <CalendarView onBack={handleBack}/> : <Navigate to="/login" />} />
           <Route path="/events" element={isAuthenticated ? <EventsPage onBack={handleBack} /> : <Navigate to="/login" />} />
           <Route path="/profile" element={isAuthenticated ? <ProfilePage onBack={handleBack} /> : <Navigate to="/login" />} />
           <Route path="/accounts-table" element={isAuthenticated ? <AccountsTable/> : <Navigate to="/login" />} /> {/* Adding Accounts Table */}
