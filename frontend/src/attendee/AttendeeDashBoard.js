@@ -26,12 +26,12 @@ export default function AttendeeDashboard() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-
+  
       if (!token) {
         navigate("/login");
         return;
       }
-
+  
       const response = await fetch("http://localhost:5003/event/get", {
         method: "GET",
         headers: {
@@ -39,33 +39,38 @@ export default function AttendeeDashboard() {
           Authorization: `Bearer ${token}`,
         },
       });
-
+  
       if (!response.ok) throw new Error("Failed to fetch events");
-
+  
       const data = await response.json();
-
+  
       const today = new Date();
       const yesterday = new Date(today);
       const tomorrow = new Date(today);
       yesterday.setDate(today.getDate() - 1);
       tomorrow.setDate(today.getDate() + 1);
-
-      const formatDate = (d) => d.toISOString().split("T")[0];
-
+  
+      // ✅ Use local time formatting
+      const formatDate = (d) =>
+        `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d
+          .getDate()
+          .toString()
+          .padStart(2, '0')}`;
+  
       const grouped = { yesterday: [], today: [], tomorrow: [] };
-
+  
       data.forEach((event) => {
         const date = event.start?.split(" ")[0];
         const time = event.start?.split(" ")[1];
         const color = categoryColors[event.category] || "bg-gray-200 text-gray-800";
-
+  
         const formatted = { ...event, date, time, color };
-
+  
         if (date === formatDate(yesterday)) grouped.yesterday.push(formatted);
         else if (date === formatDate(today)) grouped.today.push(formatted);
         else if (date === formatDate(tomorrow)) grouped.tomorrow.push(formatted);
       });
-
+  
       setEventsData(grouped);
     } catch (err) {
       setError(err.message);
@@ -73,6 +78,7 @@ export default function AttendeeDashboard() {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchEvents();
