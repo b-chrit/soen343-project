@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import HeaderBar from "../HeaderBar";
-import { useNavigate } from "react-router-dom";
 
-// Category color mapping
 const categoryColors = {
   Technology: "bg-blue-100 text-blue-800",
   Finance: "bg-green-100 text-green-800",
@@ -13,19 +12,15 @@ const categoryColors = {
   "Tech & Business": "bg-teal-100 text-teal-800",
 };
 
-export default function EventDashboard() {
+export default function AttendeeDashboard() {
   const navigate = useNavigate();
+  const userType = localStorage.getItem("user_type");
+
   const days = ["yesterday", "today", "tomorrow"];
   const [dayIndex, setDayIndex] = useState(1);
-  const [eventsData, setEventsData] = useState({
-    yesterday: [],
-    today: [],
-    tomorrow: [],
-  });
+  const [eventsData, setEventsData] = useState({ yesterday: [], today: [], tomorrow: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const userType = localStorage.getItem("user_type");
 
   const fetchEvents = async () => {
     try {
@@ -51,41 +46,27 @@ export default function EventDashboard() {
 
       const today = new Date();
       const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
       const tomorrow = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
       tomorrow.setDate(today.getDate() + 1);
 
-      const formatDate = (dateObj) => dateObj.toISOString().split("T")[0];
+      const formatDate = (d) => d.toISOString().split("T")[0];
 
-      const eventsByDate = { yesterday: [], today: [], tomorrow: [] };
+      const grouped = { yesterday: [], today: [], tomorrow: [] };
 
       data.forEach((event) => {
-        const eventDateObj = new Date(event.start);
-        const eventDateStr = formatDate(eventDateObj);
+        const date = event.start?.split(" ")[0];
+        const time = event.start?.split(" ")[1];
+        const color = categoryColors[event.category] || "bg-gray-200 text-gray-800";
 
-        const categoryColor =
-          categoryColors[event.category] || "bg-gray-200 text-gray-800";
+        const formatted = { ...event, date, time, color };
 
-        const time = event.start.split(" ")[1]; // Extract time part
-        const date = event.start.split(" ")[0]; // Extract date part
-
-        const formattedEvent = {
-          ...event,
-          color: categoryColor,
-          time,
-          date,
-        };
-
-        if (eventDateStr === formatDate(yesterday)) {
-          eventsByDate.yesterday.push(formattedEvent);
-        } else if (eventDateStr === formatDate(today)) {
-          eventsByDate.today.push(formattedEvent);
-        } else if (eventDateStr === formatDate(tomorrow)) {
-          eventsByDate.tomorrow.push(formattedEvent);
-        }
+        if (date === formatDate(yesterday)) grouped.yesterday.push(formatted);
+        else if (date === formatDate(today)) grouped.today.push(formatted);
+        else if (date === formatDate(tomorrow)) grouped.tomorrow.push(formatted);
       });
 
-      setEventsData(eventsByDate);
+      setEventsData(grouped);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -98,18 +79,15 @@ export default function EventDashboard() {
   }, []);
 
   const handleDayChange = (direction) => {
-    if (direction === "prev" && dayIndex > 0) {
-      setDayIndex(dayIndex - 1);
-    } else if (direction === "next" && dayIndex < days.length - 1) {
-      setDayIndex(dayIndex + 1);
-    }
+    if (direction === "prev" && dayIndex > 0) setDayIndex(dayIndex - 1);
+    if (direction === "next" && dayIndex < days.length - 1) setDayIndex(dayIndex + 1);
   };
 
   const currentDay = days[dayIndex];
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans relative">
-      {/* HEADER BAR */}
+    <div className="min-h-screen bg-white flex flex-col relative">
+      {/* HEADER */}
       <HeaderBar
         menuOptions={[
           { label: "EVENTS", onClick: () => navigate("/events") },
@@ -125,107 +103,89 @@ export default function EventDashboard() {
         ]}
       />
 
-      {/* MAIN CONTENT */}
-      <div className="flex flex-grow items-center justify-center px-6 py-10 bg-gray-50">
-        <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-12">
-          {/* LEFT SIDE - SEES LOGO */}
-          <div className="flex items-center justify-center">
-            <h1 className="text-9xl font-extrabold text-gray-800 tracking-tight hover:text-black transition-all duration-300">
-              SEES
-            </h1>
-          </div>
-
-          {/* RIGHT SIDE - EVENTS */}
-          <div className="flex flex-col items-center">
-            {/* DAY NAVIGATION */}
-            <div className="flex items-center mb-6 space-x-6">
-              <button
-                onClick={() => handleDayChange("prev")}
-                disabled={dayIndex === 0}
-                className={`p-2 rounded-full transition duration-300 ${
-                  dayIndex === 0
-                    ? "cursor-not-allowed opacity-40"
-                    : "hover:bg-gray-200"
-                }`}
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-
-              <h2 className="text-xl md:text-2xl font-semibold uppercase tracking-wide text-gray-800">
-                {currentDay}
-              </h2>
-
-              <button
-                onClick={() => handleDayChange("next")}
-                disabled={dayIndex === days.length - 1}
-                className={`p-2 rounded-full transition duration-300 ${
-                  dayIndex === days.length - 1
-                    ? "cursor-not-allowed opacity-40"
-                    : "hover:bg-gray-200"
-                }`}
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* EVENTS LIST */}
-            <div className="w-full max-w-md space-y-4 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 px-2">
-              {loading && (
-                <p className="text-gray-600 text-sm">Loading events...</p>
-              )}
-
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-
-              {!loading && !error && eventsData[currentDay].length === 0 && (
-                <div className="bg-gray-100 p-6 rounded-lg shadow-md text-center animate-fadeIn">
-                  <Calendar className="w-16 h-16 mx-auto text-gray-400" />
-                  <p className="text-lg font-medium text-gray-700 mt-4">
-                    No events for {currentDay}.
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Check back later for updates!
-                  </p>
-                </div>
-              )}
-
-              {!loading &&
-                !error &&
-                eventsData[currentDay].map((event, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer transform hover:scale-[1.02] px-4 py-3 animate-fadeIn"
-                  >
-                    {/* Category color bar */}
-                    <div className={`w-2 h-16 ${event.color} rounded-l-md`} />
-
-                    {/* Event Info */}
-                    <div className="ml-4 flex flex-col">
-                      <h3 className="font-semibold text-gray-800">
-                        {event.title}
-                      </h3>
-                      <p className="text-xs text-gray-500">{event.category}</p>
-                      <p className="text-sm text-gray-600">
-                        {event.date} • {event.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            {/* VIEW CALENDAR BUTTON */}
-            <div className="mt-10">
-              <button
-                onClick={() => navigate("/calendar")}
-                className="bg-black text-white py-2 px-8 rounded-lg transition-all duration-300 border border-black hover:bg-white hover:text-black hover:scale-105 hover:shadow-lg"
-              >
-                View Events Calendar
-              </button>
-            </div>
-          </div>
+      {/* HERO */}
+      <section className="px-16 py-12 bg-gray-100 flex justify-between items-center">
+        <div>
+          <h2 className="text-4xl font-bold mb-4">Welcome, Attendee!</h2>
+          <p className="text-gray-600 text-lg mb-6">
+            Explore what's happening around you. Stay informed and involved.
+          </p>
+          <button
+            onClick={() => navigate("/events")}
+            className="bg-black text-white py-3 px-8 rounded-lg transition-all duration-300 border border-black hover:bg-white hover:text-black hover:scale-105 hover:shadow-md"
+          >
+            Register for an Event
+          </button>
         </div>
-      </div>
+        <div className="hidden md:block text-9xl font-extrabold text-gray-300 hover:text-black transition-colors duration-300">
+          SEES
+        </div>
+      </section>
 
-      <footer className="text-sm text-gray-600 p-4 pl-6 absolute bottom-0 left-0">
+      {/* DAY NAVIGATION */}
+      <section className="px-16 py-10 flex items-center justify-center space-x-6">
+        <button
+          onClick={() => handleDayChange("prev")}
+          disabled={dayIndex === 0}
+          className={`p-2 rounded-full transition duration-300 ${
+            dayIndex === 0 ? "cursor-not-allowed opacity-40" : "hover:bg-gray-200"
+          }`}
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <h2 className="text-2xl font-semibold uppercase tracking-wide text-gray-800">
+          {currentDay}
+        </h2>
+        <button
+          onClick={() => handleDayChange("next")}
+          disabled={dayIndex === days.length - 1}
+          className={`p-2 rounded-full transition duration-300 ${
+            dayIndex === days.length - 1 ? "cursor-not-allowed opacity-40" : "hover:bg-gray-200"
+          }`}
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </section>
+
+      {/* EVENTS LIST */}
+      <section className="px-16 pb-20">
+        {loading && <p className="text-gray-500 text-sm">Loading events...</p>}
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+
+        {!loading && !error && eventsData[currentDay].length === 0 && (
+          <div className="bg-gray-100 p-6 rounded-lg shadow-md text-center animate-fadeIn">
+            <Calendar className="w-16 h-16 mx-auto text-gray-400" />
+            <p className="text-lg font-medium text-gray-700 mt-4">
+              No events for {currentDay}.
+            </p>
+            <p className="text-sm text-gray-500 mt-1">Check back later for updates!</p>
+          </div>
+        )}
+
+        {!loading && !error && eventsData[currentDay].length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {eventsData[currentDay].map((event, index) => (
+              <div
+                key={index}
+                className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] p-6"
+              >
+                <h3 className="text-xl font-bold mb-2">{event.title}</h3>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${event.color} mb-2`}
+                >
+                  {event.category}
+                </span>
+                <p className="text-sm text-gray-600">Date: {event.date}</p>
+                <p className="text-sm text-gray-600">Time: {event.time}</p>
+                <p className="text-sm text-gray-600">Location: {event.location}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* FOOTER */}
+      <footer className="text-sm text-gray-600 p-4 pl-6">
         LOGGED IN AS: {userType ? userType.toUpperCase() : "UNKNOWN"}
       </footer>
     </div>

@@ -39,9 +39,11 @@ const Login = () => {
         // Navigate to the correct dashboard
         if (result.user_type === "admin") {
           navigate("/admin-dashboard");
+        } else if (result.user_type === "stakeholder") {
+          navigate("/stakeholder-dashboard");
         } else {
           navigate("/dashboard");
-        }
+        }        
       } else {
         setApiError(result.error || "Login failed. Please try again.");
       }

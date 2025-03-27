@@ -205,3 +205,12 @@ class Event(db.Model):
     def set_fee(self, fee : float):
         self.__registration_fee = fee
         db.session.commit()
+
+    def remove_sponsor(self):
+        self.__sponsor_id = None
+        db.session.commit()
+
+    def set_sponsor(self, sponsor_id: int):
+        self.__sponsor_id = sponsor_id
+        db.session.commit()
+
