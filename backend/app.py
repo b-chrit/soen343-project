@@ -10,6 +10,7 @@ from views.event_route          import CreateEventResource, GetEventResource, De
 from views.admin_route          import GetUsersResource, DeleteUserResource
 from views.organizer_route      import GetOrganizerEventResource
 from views.user_routes          import UpdatePasswordResource, GetUserProfile, EditProfileResource
+from views.stakeholder_route import CheckSponsorshipResource, SponsorEventResource, CancelSponsorshipResource
 
 
 from controllers        import Controller
@@ -57,6 +58,11 @@ with app.app_context():
     api.add_resource(   DeleteUserResource,         '/admin/delete_user'        )
 
     api.add_resource(   GetOrganizerEventResource,  '/organizer/get_event'      )
+
+    api.add_resource(SponsorEventResource,        '/stakeholder/sponsor_event')
+    api.add_resource(CancelSponsorshipResource,   '/stakeholder/cancel_sponsorship')
+    api.add_resource(CheckSponsorshipResource, '/stakeholder/check_sponsorship')
+
 
 
 
