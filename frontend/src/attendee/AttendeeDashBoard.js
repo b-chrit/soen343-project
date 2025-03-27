@@ -37,7 +37,7 @@ export default function EventDashboard() {
         return;
       }
 
-      const response = await fetch("http://localhost:5003/get_event", {
+      const response = await fetch("http://localhost:5003/event/get", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

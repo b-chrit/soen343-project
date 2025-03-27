@@ -46,7 +46,7 @@ export default function ProfilePage({ onBack }) {
           return;
         }
 
-        const response = await fetch("http://localhost:5003/profile", {
+        const response = await fetch("http://localhost:5003/user/get_profile", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -102,7 +102,7 @@ export default function ProfilePage({ onBack }) {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5003/update_profile", {
+      const response = await fetch("http://localhost:5003/user/edit_profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -153,7 +153,7 @@ export default function ProfilePage({ onBack }) {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5003/update_password", {
+      const response = await fetch("http://localhost:5003/user/reset_password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

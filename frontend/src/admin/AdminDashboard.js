@@ -24,7 +24,7 @@ export default function AdminDashboard() {
         return;
       }
 
-      const response = await fetch("http://localhost:5003/get_all_users", {
+      const response = await fetch("http://localhost:5003/admin/get_users", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -36,6 +36,8 @@ export default function AdminDashboard() {
       }
 
       const data = await response.json();
+
+      console.log(data);
 
       // Show only the first 3 users
       if (data.length > 3) {

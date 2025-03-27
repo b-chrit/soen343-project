@@ -20,6 +20,8 @@ export default function MyEventsModal({
     location: event.location,
     description: event.description,
     capacity: event.capacity,
+    event_type: event.event_type,
+    registration_fee: event.registration_fee
   });
 
   const navigate = useNavigate();
@@ -34,13 +36,13 @@ export default function MyEventsModal({
         return;
       }
 
-      const response = await fetch("http://localhost:5003/edit_event", {
+      const response = await fetch("http://localhost:5003/event/edit", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ event_id: event.id, updatedEvent }),
+        body: JSON.stringify({ event_id: event.id, ...updatedEvent }),
       });
 
       if (!response.ok) {
@@ -71,7 +73,7 @@ export default function MyEventsModal({
         return;
       }
 
-      const response = await fetch("http://localhost:5003/delete_event", {
+      const response = await fetch("http://localhost:5003/event/delete", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -109,6 +111,8 @@ export default function MyEventsModal({
         location: event.location,
         description: event.description,
         capacity: event.capacity,
+        registration_fee: event.registration_fee,
+        event_type: event.event_type
       });
     }
   }, [isEditing, event]);
@@ -218,6 +222,18 @@ export default function MyEventsModal({
                     setUpdatedEvent({ ...updatedEvent, capacity: e.target.value })
                   }
                   placeholder="Enter event capacity"
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-sm text-gray-700 mb-2">Fee</label>
+                <input
+                  type="number"
+                  value={updatedEvent.registration_fee}
+                  onChange={(e) =>
+                    setUpdatedEvent({ ...updatedEvent, registration_fee: e.target.value })
+                  }
+                  placeholder="Enter registration fee"
                   className="w-full p-2 border border-gray-300 rounded-lg"
                 />
               </div>

@@ -49,7 +49,7 @@ export default function AnalyticsPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:5003/get_organizer_events", {
+      const response = await fetch("http://localhost:5003/organizer/get_event", {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });

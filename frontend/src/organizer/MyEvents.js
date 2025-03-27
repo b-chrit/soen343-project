@@ -71,7 +71,7 @@ export default function MyEvents() {
     }
 
     try {
-      const response = await fetch("http://localhost:5003/get_organizer_events", {
+      const response = await fetch("http://localhost:5003/organizer/get_event", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -95,7 +95,7 @@ export default function MyEvents() {
 
         const formattedStart = new Date(start).toISOString().slice(0, 16);
         const formattedEnd = new Date(end).toISOString().slice(0, 16);
-
+        console.log(event);
         return {
           id: event.id,
           title: event.title,
@@ -111,6 +111,8 @@ export default function MyEvents() {
           registrations: event.registrations || 0,
           location: event.location,
           description: event.description,
+          event_type: event.event_type,
+          registration_fee: event.fee
         };
       });
 
@@ -150,6 +152,7 @@ export default function MyEvents() {
     );
     setEventsData(updatedEvents);
     setSelectedEvent(null);
+    fetchMyEvents();
   };
 
   return (

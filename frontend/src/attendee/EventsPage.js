@@ -55,7 +55,7 @@ export default function EventsPage({ onBack }) {
           return;
         }
 
-        const response = await fetch("http://localhost:5003/get_event", {
+        const response = await fetch("http://localhost:5003/event/get", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -80,7 +80,8 @@ export default function EventsPage({ onBack }) {
           return {
             id: event.id,
             title: event.title,
-            organizer: event.organizer_name || "N/A",
+            organizer_name: event.organizer_name || "N/A",
+            organization_name: event.organization_name || "N/A",
             category: event.category || "N/A",
             categoryColor,
             date,
@@ -93,6 +94,8 @@ export default function EventsPage({ onBack }) {
             description: event.description,
             start: event.start,
             end: event.end,
+            fee: event.fee,
+            feeFormatted: event.fee == 0.0 ? 'Free' : "$ "+event.fee.toFixed(2)
           };
         });
 
@@ -106,7 +109,7 @@ export default function EventsPage({ onBack }) {
     };
 
     fetchEvents();
-  }, [navigate]);
+  }, [navigate, registeredEvents]);
 
   useEffect(() => {
     let filtered = (viewingRegistrations ? registeredEvents : eventsData).filter(
@@ -151,7 +154,7 @@ export default function EventsPage({ onBack }) {
     }
   
     try {
-      const response = await fetch("http://localhost:5003/get_registered_events", {
+      const response = await fetch("http://localhost:5003/attendee/get_events", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -175,13 +178,13 @@ export default function EventsPage({ onBack }) {
         return {
           id: event.id,
           title: event.title,
-          organizer: event.organizer_name || "N/A",
           category: event.category || "N/A",
           categoryColor,
           date,
           time,
           sponsored: event.sponsor_name ? "Yes" : "No",
           sponsor: event.sponsor_name || "N/A",
+          organization_name: event.organization_name,
           organizer_name: event.organizer_name,
           sponsor_name: event.sponsor_name,
           description: event.description,
@@ -220,7 +223,7 @@ export default function EventsPage({ onBack }) {
 
     try {
       const response = await fetch(
-        `http://localhost:5003/check_registration?event_id=${event.id}`,
+        `http://localhost:5003/event/check_registration?event_id=${event.id}`,
         {
           method: "GET",
           headers: {
@@ -309,8 +312,8 @@ export default function EventsPage({ onBack }) {
           <EventsTable
             events={displayedEvents}
             columns={[
-              { label: "Event", accessor: "title", width: "w-1/5" },
-              { label: "Organizer", accessor: "organizer", width: "w-1/5" },
+              { label: "Event", accessor: "title", width: "w-1/2" },
+              { label: "Organizer", accessor: "organization_name", width: "w-1/5" },
               {
                 label: "Category",
                 accessor: "category",
@@ -321,10 +324,12 @@ export default function EventsPage({ onBack }) {
                   </span>
                 ),
               },
+              { label: "Fee", accessor: "feeFormatted", width: "w-1/6"},
               { label: "Date", accessor: "date", width: "w-1/5" },
               { label: "Time", accessor: "time", width: "w-1/5" },
               { label: "Sponsored", accessor: "sponsored", width: "w-1/5" },
               { label: "Sponsor", accessor: "sponsor", width: "w-1/5" },
+              
             ]}
             onEventClick={handleEventClick}
             currentPage={currentPage}
