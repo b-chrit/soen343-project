@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 import HeaderBar from "./HeaderBar";
 import { useNavigate } from "react-router-dom";
+import SuggestedEvents from "./SuggestedEvents";
 
 export default function ProfilePage({ onBack }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -372,6 +373,9 @@ export default function ProfilePage({ onBack }) {
             </div>
           )}
         </div>
+      </div>
+      <div className="mb-20 mx-auto">
+        <SuggestedEvents />
       </div>
 
       {/* FOOTER */}
