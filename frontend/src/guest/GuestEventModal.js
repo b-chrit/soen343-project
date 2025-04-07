@@ -1,25 +1,9 @@
 import { useState } from "react";
-import { ClipLoader } from 'react-spinners';
-import { CheckCircle, XCircle } from "lucide-react";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import GuestEventDescription from "./GuestEventDescription"
 
 
-export default function GuestEventModal({ event, onClose, updateEvents }) {
-  const [isLoading, setIsLoading] = useState(false);
+export default function GuestEventModal({ event, onClose}) {
   const [error, setError] = useState(null);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [isRegistered, setIsRegistered] = useState(event.isRegistered);
-
-  const [isInPayment, setIsInPayment] = useState(false)
-  const [clientSecret, setClientSecret] = useState(null);
-
-  const handleRegistration = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-        return;
-    }
-};
 
   if (!event) return null;
 
