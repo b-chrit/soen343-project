@@ -11,9 +11,9 @@ import Login from "./Login";
 import Register from "./Register";
 import MyEvents from "./organizer/MyEvents";
 import AnalyticsPage from "./organizer/AnalyticsPage";
-import UserManagement from "./admin/UserManagement ";
+import UserManagement from "./admin/UserManagement";
 import AdminEventsPage from "./admin/AdminEventsPage";
-import AccountsTable from "./admin/AccountsTable"; 
+import AccountsTable from "./admin/AccountsTable";
 
 export default function App() {
   const navigate = useNavigate();
@@ -36,10 +36,10 @@ export default function App() {
           <Route path="/calendar" element={isAuthenticated ? <CalendarView onBack={handleBack}/> : <Navigate to="/login" />} />
           <Route path="/events" element={isAuthenticated ? <EventsPage onBack={handleBack} /> : <Navigate to="/login" />} />
           <Route path="/profile" element={isAuthenticated ? <ProfilePage onBack={handleBack} /> : <Navigate to="/login" />} />
-          <Route path="/accounts-table" element={isAuthenticated ? <AccountsTable/> : <Navigate to="/login" />} /> {/* Adding Accounts Table */}
+          <Route path="/accounts-table" element={isAuthenticated ? <AccountsTable/> : <Navigate to="/login" />} />
           <Route path="/my-events" element={isAuthenticated ? <MyEvents /> : <Navigate to="/login" />} />
           <Route path="/admin-events" element={isAuthenticated ? <AdminEventsPage onBack={handleBack} /> : <Navigate to="/login" />} />
-          <Route path="/sponsor-event" element={isAuthenticated && userType === "stakeholder" ? <SponsorEvent /> : <Navigate to="/login" />} />
+          <Route path="/sponsor-event" element={isAuthenticated && userType === "stakeholder" ? <SponsorEvent onBack={handleBack}/> : <Navigate to="/login" />} />
           <Route path="/analytics" element={isAuthenticated && (userType === "organizer" || userType === "stakeholder") ? <AnalyticsPage /> : <Navigate to="/login" />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
