@@ -3,7 +3,7 @@ from __future__ import annotations
 from models import db
 from .users.attendee import Attendee
 
-from models.relationship import event_attendees
+from models.registration import Registration
 from datetime import datetime
 
 class Event(db.Model):
@@ -38,7 +38,8 @@ class Event(db.Model):
     __organizer_id      = db.Column('organizer_id', db.Integer,     db.ForeignKey('organizers.id'), nullable=False)
     __sponsor_id        = db.Column('sponsor_id', db.Integer,     db.ForeignKey('stakeholders.id'), nullable=True)
 
-    registrations     = db.relationship('Attendee', secondary='event_attendees', back_populates='events')
+    registrations       = db.relationship('Registration', back_populates='event', cascade='all, delete-orphan')
+    
 
     # Relationships
     #sponsor = db.relationship("Stakeholder", backref="sponsored_events", uselist=False)
@@ -142,9 +143,11 @@ class Event(db.Model):
     def get_capacity(self) -> int:
         return self.__capacity
 
-    def get_registrations(self) -> int:
+    def get_registrations(self) -> list:
         return self.registrations
-
+    def get_attendees(self) -> list:
+        return [registration.attendee for registration in self.registrations]
+    
     def get_event_type(self) -> str:
         return self.__event_type
 
@@ -190,16 +193,15 @@ class Event(db.Model):
     def set_event_type(self, event_type: str) -> None:
         self.__event_type = event_type
         db.session.commit()
-
-    def set_registrations(self, registrations: int) -> None:
-        self.registrations = registrations
-        db.session.commit()
-    
+        
     def add_registration(self, attendee : Attendee):
-        self.registrations.append(attendee)
+        registration = Registration(attendee=attendee, event=self)
+        self.registrations.append(registration)
         db.session.commit()
+
     def remove_registration(self, attendee : Attendee):
-        self.registrations.remove(attendee)
+        registration = Registration.find(attendee_id = attendee.id, event_id = self.id)
+        self.registrations.remove(registration)
         db.session.commit()
 
     def set_fee(self, fee : float):

@@ -6,7 +6,7 @@ from flask_jwt_extended import JWTManager
 from views.payment_route import PublicKeyResource
 from views.attendee_route import RegisterToEventResource, CheckRegistration, GetRegisteredEventsResource, CancelRegistration
 from views.authentication_route import LoginResource, RegisterResource
-from views.event_route import CreateEventResource, GetEventResource, DeleteEventResource, EditEventResource
+from views.event_route import CreateEventResource, GetEventResource, DeleteEventResource, EditEventResource, GetAnalyticsResource
 from views.admin_route import GetUsersResource, DeleteUserResource
 from views.organizer_route import GetOrganizerEventResource, RequestSponsorshipResource
 from views.user_routes import UpdatePasswordResource, GetUserProfile, EditProfileResource, GetAllStakeholdersResource
@@ -50,6 +50,8 @@ with app.app_context():
     api.add_resource(CancelRegistration, '/event/deregister')
     api.add_resource(DeleteEventResource, '/event/delete_event')
     api.add_resource(CheckRegistration, '/event/check_registration')
+
+    api.add_resource(GetAnalyticsResource, '/event/analytics')
 
     api.add_resource(GetUsersResource, '/admin/get_users')
     api.add_resource(DeleteUserResource, '/admin/delete_user')

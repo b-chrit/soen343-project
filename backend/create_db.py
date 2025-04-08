@@ -1,5 +1,5 @@
 from app import app
-from models import db
+from models import db, Registration
 from controllers import AttendeeController, OrganizerController, EventController
 from datetime import datetime, timedelta
 
