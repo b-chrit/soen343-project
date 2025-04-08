@@ -54,7 +54,7 @@ const Login = () => {
 
   const handleGuestLogin = () => {
     setGuestMessage('You are continuing as a guest');
-    navigate("/events");
+    navigate("/guest-dashboard");
   };
 
   return (

@@ -12,6 +12,8 @@ import AnalyticsPage from "./organizer/AnalyticsPage";  // Import the AnalyticsP
 import UserManagement  from "./admin/UserManagement ";
 import AdminEventsPage from "./admin/AdminEventsPage";
 import AccountsTable from "./admin/AccountsTable"; //Import accountsTable component
+import GuestDashboard from "./guest/GuestDashboard";
+import GuestEventsPage from "./guest/GuestEventsPage"; 
 
 export default function App() {
   const navigate = useNavigate();
@@ -31,6 +33,8 @@ export default function App() {
           <Route path="/" element={isAuthenticated ? (userType === "admin" ? <Navigate to="/admin-dashboard" /> : <Navigate to="/dashboard" />) : <Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/guest-dashboard" element={<GuestDashboard/>} /> {/* Guest dashboard route */}
+          <Route path="/guest-events" element={<GuestEventsPage/>} /> {/* Guest events page route */}
 
           {/* ✅ Authenticated routes */}
           <Route path="/dashboard" element={isAuthenticated ? (userType === "attendee" ? <AttendeeDashBoard /> : <OrganizerDashBoard />) : <Navigate to="/login" />} />

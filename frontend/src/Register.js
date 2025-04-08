@@ -37,7 +37,7 @@ const Register = () => {
   };
 
   const handleContinueAsGuest = () => {
-    navigate("/events");
+    navigate("/guest-dashboard");
   };
 
   const handleRegister = async (e) => {
