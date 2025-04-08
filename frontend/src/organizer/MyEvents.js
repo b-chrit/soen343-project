@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, Users, Calendar, MapPin, DollarSign } from "lucide-react";
+import { ChevronLeft, Users, Calendar, MapPin, DollarSign, Eye } from "lucide-react";
 import HeaderBar from "../HeaderBar";
 import EventsTable from "../EventsTable";
 import SearchAndFilter from "../SearchAndFilter";
+import MyEventsModal from "./MyEventsModal"; // Import the modal component
 import { useNavigate } from "react-router-dom";
 
 const eventsPerPage = 5;
@@ -44,6 +45,10 @@ export default function MyEvents() {
   const [sponsorshipMode, setSponsorshipMode] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [hoveredEvent, setHoveredEvent] = useState(null);
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalEvent, setModalEvent] = useState(null);
 
   const userType = localStorage.getItem("user_type");
 
@@ -162,6 +167,12 @@ export default function MyEvents() {
     }
     setFilteredEvents(filtered);
   }, [searchQuery, selectedCategory, selectedDate, selectedTime, eventsData]);
+
+  // This is the function to handle event view (when eye icon is clicked)
+  const handleEventView = (event) => {
+    setModalEvent(event);
+    setIsModalOpen(true);
+  };
 
   const handleSponsorshipRequest = async () => {
     // Ensure an event and a stakeholder have been selected
@@ -294,7 +305,6 @@ export default function MyEvents() {
     }
   };
   
-
   const resetFilters = () => {
     setSearchQuery("");
     setSelectedCategory("");
@@ -537,10 +547,20 @@ export default function MyEvents() {
               hoveredRowId={hoveredEvent?.id}
               selectedRowId={selectedEvent?.id}
               highlightSelectedRow={sponsorshipMode}
+              onEventClick={handleEventView} // Pass the event view handler
             />
           </div>
         )}
       </div>
+
+      {/* Modal Component */}
+      {isModalOpen && modalEvent && (
+        <MyEventsModal
+          event={modalEvent}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
 
       {/* Footer */}
       <footer className="text-sm text-gray-600 p-4 pl-6 border-t border-gray-200">
