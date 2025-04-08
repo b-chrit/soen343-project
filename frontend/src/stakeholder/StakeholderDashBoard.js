@@ -168,13 +168,5 @@ const EventCard = ({ title, date, location, organizer, onSponsorClick }) => (
       <p className="text-gray-600 text-sm mb-1">Location: {location}</p>
       <p className="text-gray-600 text-sm">Organizer: {organizer}</p>
     </div>
-    <div className="flex justify-end mt-6">
-      <button
-        onClick={onSponsorClick}
-        className="bg-black text-white py-2 px-6 rounded-lg text-sm transition-all duration-300 hover:bg-white hover:text-black border border-black hover:scale-105"
-      >
-        Sponsor
-      </button>
-    </div>
   </div>
 );
