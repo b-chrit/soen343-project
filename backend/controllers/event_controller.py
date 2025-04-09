@@ -1,4 +1,4 @@
-from models         import Event, User, Organizer, Stakeholder, Attendee, db
+from models         import Event, User, Organizer, Stakeholder, Attendee, db, Registration
 from controllers    import PaymentController
 
 from datetime       import datetime
@@ -68,7 +68,7 @@ class EventController:
             
             return { 'client_secret' : client_secret }
 
-        if event.get_capacity() <= len(event.get_registrations()):
+        if event.get_capacity() <= len(event.get_attendees()):
             raise Event.EventError.Full()
         
         if event.get_fee() > 0:
@@ -153,3 +153,7 @@ class EventController:
         event.set_capacity(capacity)
         event.set_event_type(event_type)
         event.set_fee(registration_fee)
+
+    def get_analytics( event_id : int, group_by: str = 'day' ):
+        analytics = Registration.get_analytics(event_id, group_by)
+        return analytics

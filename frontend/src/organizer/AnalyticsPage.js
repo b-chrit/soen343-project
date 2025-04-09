@@ -73,7 +73,7 @@ export default function AnalyticsPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:5003/get_event_registration_over_time?event_id=${eventId}`,
+        `http://localhost:5003/event/analytics?event_id=${eventId}`,
         {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },

@@ -131,4 +131,22 @@ class GetEventResource(Resource):
                 'code'      : str(e)
             }, HTTP_code if HTTP_code else 400
         
-
+class GetAnalyticsResource(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument( 'event_id', location = 'args', type = int, required = True )
+        parser.add_argument( 'group_by', location = 'args', type = str, required = False )
+        try:
+            args        : reqparse.Namespace    = parser.parse_args()
+            event_id    : int                   = args.get('event_id')
+            group_by    : str                   = args.get('group_by')
+            if not group_by:
+                group_by = 'day'
+            analytics = {'registrations_over_time' :EventController.get_analytics( event_id, group_by )}
+            return analytics, 200
+        except Exception as e:
+            HTTP_code : str = getattr(e, 'HTTP_code', None)
+            return {
+                'status'    : 'error',
+                'code'      : str(e)
+            }, HTTP_code if HTTP_code else 400
