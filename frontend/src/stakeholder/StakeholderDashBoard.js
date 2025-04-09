@@ -4,9 +4,9 @@ import {
   Handshake,
   BarChart,
   FolderKanban,
+  ArrowRight
 } from "lucide-react";
 import HeaderBar from "../HeaderBar";
-
 export default function StakeholderDashboard() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
@@ -133,12 +133,13 @@ export default function StakeholderDashboard() {
 
         {hasMore && (
           <div className="text-center mt-4">
-            <button
-              onClick={() => navigate("/events")}
-              className="bg-black text-white py-3 px-8 rounded-lg transition-all duration-300 border border-black hover:bg-white hover:text-black hover:scale-105 hover:shadow-md"
-            >
-              View More
-            </button>
+           <button
+  onClick={() => navigate("/events")}
+  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-black to-gray-800 text-white font-semibold tracking-wide py-3 px-8 rounded-full border border-black shadow-sm hover:from-white hover:to-white hover:text-black hover:shadow-lg hover:scale-105 transition-all duration-300"
+>
+  View More
+  <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+</button>
           </div>
         )}
       </section>
