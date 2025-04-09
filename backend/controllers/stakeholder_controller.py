@@ -55,3 +55,18 @@ class StakeholderController:
     def get_all_stakeholders():
         stakeholders = Stakeholder.query.all()
         return stakeholders
+    
+    def get_sponsored_events(stakeholder_id: int):  
+        stakeholder = Stakeholder.find(stakeholder_id)
+        if not stakeholder:
+            raise User.UserError.NotFound()
+    
+
+        all_events = Event.find()
+        sponsored_events = [event for event in all_events if event.get_sponsor() == stakeholder_id]
+
+        events_data = []
+        for event in sponsored_events:
+            events_data.append(event.get_data())
+    
+        return events_data
