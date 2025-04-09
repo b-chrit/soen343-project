@@ -8,36 +8,6 @@ export default function SponsorModal({ event, onClose, updateEvents }) {
   const [error, setError] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSponsored, setIsSponsored] = useState(false);
-  const [stakeholderId, setStakeholderId] = useState(null);
-
-  useEffect(() => {
-    const fetchStakeholderInfo = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        window.location.href = "/login";
-        return;
-      }
-
-      try {
-        const response = await fetch("http://localhost:5003/stakeholder/info", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        if (!response.ok) throw new Error("Failed to fetch stakeholder information");
-        
-        const data = await response.json();
-        setStakeholderId(data.stakeholder_id);
-      } catch (err) {
-        setError("Failed to fetch stakeholder information: " + err.message);
-      }
-    };
-
-    fetchStakeholderInfo();
-  }, []);
 
   useEffect(() => {
     const checkSponsorship = async () => {
@@ -75,11 +45,6 @@ export default function SponsorModal({ event, onClose, updateEvents }) {
   }, [event.id]);
 
   const handleSponsorship = async () => {
-    if (!stakeholderId) {
-      setError("Stakeholder information not available. Please try again later.");
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
     setIsSuccess(false);
@@ -104,8 +69,8 @@ export default function SponsorModal({ event, onClose, updateEvents }) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ 
-          event_id: event.id,
-          stakeholder_id: stakeholderId 
+          event_id: event.id
+          // No need to send stakeholder_id anymore
         }),
       });
 

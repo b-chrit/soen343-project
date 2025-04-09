@@ -100,28 +100,24 @@ export default function OrganizerDashBoard() {
       </section>
 
       {/* ✅ Quick Actions */}
-      <section className="px-16 py-10 grid grid-cols-1 md:grid-cols-4 gap-6">
-        <ActionCard
-          label="Create Event"
-          icon={<CalendarPlus className="w-8 h-8" />}
-          onClick={handleCreateEventClick}
-        />
-        <ActionCard
-          label="My Events"
-          icon={<FolderPlus className="w-8 h-8" />}
-          onClick={() => navigate("/my-events")}
-        />
-        <ActionCard
-          label="Request Sponsorship"
-          icon={<Handshake className="w-8 h-8" />}
-          onClick={() => navigate("/request-sponsorship")}
-        />
-        <ActionCard
-          label="View Analytics"
-          icon={<BarChart className="w-8 h-8" />}
-          onClick={() => navigate("/analytics")}
-        />
-      </section>
+{/* ✅ Quick Actions */}
+<section className="px-16 py-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+  <ActionCard
+    label="Create Event"
+    icon={<CalendarPlus className="w-8 h-8" />}
+    onClick={handleCreateEventClick}
+  />
+  <ActionCard
+    label="My Events & Sponsorships"
+    icon={<FolderPlus className="w-8 h-8" />}
+    onClick={() => navigate("/my-events")}
+  />
+  <ActionCard
+    label="View Analytics"
+    icon={<BarChart className="w-8 h-8" />}
+    onClick={() => navigate("/analytics")}
+  />
+</section>
 
       {/* ✅ Events Summary */}
       <section className="px-16 py-10">
@@ -196,14 +192,6 @@ const EventCard = ({ title, date, location, registrations, navigate }) => (
       <p className="text-gray-600 text-sm mb-1">Date: {new Date(date).toLocaleDateString()}</p>
       <p className="text-gray-600 text-sm mb-1">Location: {location}</p>
       <p className="text-gray-600 text-sm">Registrations: {registrations}</p>
-    </div>
-    <div className="flex justify-end mt-6">
-      <button
-        onClick={() => navigate("/my-events")}
-        className="bg-black text-white py-2 px-6 rounded-lg text-sm transition-all duration-300 hover:bg-white hover:text-black border border-black hover:scale-105"
-      >
-        Manage
-      </button>
     </div>
   </div>
 );

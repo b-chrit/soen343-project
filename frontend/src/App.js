@@ -3,6 +3,7 @@ import AttendeeDashBoard from "./attendee/AttendeeDashBoard";
 import AdminDashboard from "./admin/AdminDashboard";
 import OrganizerDashBoard from "./organizer/OrganizerDashBoard";
 import StakeholderDashboard from "./stakeholder/StakeholderDashBoard";
+import SponsorshipRequests from "./stakeholder/SponsorshipRequests";
 import SponsorEvent from "./stakeholder/SponsorEvent";
 import CalendarView from "./CalendarView";
 import EventsPage from "./attendee/EventsPage";
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/my-events" element={isAuthenticated ? <MyEvents /> : <Navigate to="/login" />} />
           <Route path="/admin-events" element={isAuthenticated ? <AdminEventsPage onBack={handleBack} /> : <Navigate to="/login" />} />
           <Route path="/sponsor-event" element={isAuthenticated && userType === "stakeholder" ? <SponsorEvent onBack={handleBack}/> : <Navigate to="/login" />} />
+          <Route path="/sponsorship-requests" element={isAuthenticated && userType === "stakeholder" ? <SponsorshipRequests onBack={handleBack}/> : <Navigate to="/login" />} />
           <Route path="/analytics" element={isAuthenticated && (userType === "organizer" || userType === "stakeholder") ? <AnalyticsPage /> : <Navigate to="/login" />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

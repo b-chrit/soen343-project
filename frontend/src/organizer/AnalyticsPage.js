@@ -36,36 +36,73 @@ export default function AnalyticsPage() {
 
   const userType = localStorage.getItem("user_type");
 
+  // Optional: Redirect unauthorized user types
   useEffect(() => {
-    fetchEvents();
+    if (userType !== "organizer" && userType !== "stakeholder") {
+      navigate("/unauthorized");
+    } else {
+      fetchEvents();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Helper function to fetch sponsored events for stakeholders
+  const fetchSponsoredEvents = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Unauthorized");
+
+    const response = await fetch("http://localhost:5003/stakeholder/sponsored_events", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) throw new Error("Failed to fetch sponsored events");
+
+    const data = await response.json();
+    const eventsArray = data.events || [];
+
+    // Only the id and title are needed for this dashboard dropdown.
+    return eventsArray.map((event) => ({
+      id: event.id,
+      title: event.title,
+    }));
+  };
+
+  // Fetch events based on user type
   const fetchEvents = async () => {
     const token = localStorage.getItem("token");
-
     if (!token) {
       navigate("/login");
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:5003/organizer/get_event", {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) throw new Error("Failed to fetch events");
-
-      const result = await response.json();
+      let result;
+      if (userType === "organizer") {
+        const response = await fetch("http://localhost:5003/organizer/get_event", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error("Failed to fetch events");
+        result = await response.json();
+      } else if (userType === "stakeholder") {
+        result = await fetchSponsoredEvents();
+      } else {
+        throw new Error("Unauthorized user type");
+      }
       setEvents(result);
     } catch (error) {
+      console.error(error);
       setError("Failed to load events. Please try again later.");
     }
   };
 
+  // Fetch analytics data for a selected event
   const fetchAnalyticsData = async (eventId) => {
     const token = localStorage.getItem("token");
-
     if (!token) {
       navigate("/login");
       return;
@@ -79,12 +116,12 @@ export default function AnalyticsPage() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       if (!response.ok) throw new Error("Failed to fetch registration data");
 
       const result = await response.json();
       setData(result.registrations_over_time);
     } catch (error) {
+      console.error(error);
       setError("Failed to load analytics data. Please try again later.");
     }
   };
@@ -231,19 +268,26 @@ export default function AnalyticsPage() {
             <Line data={chartData} options={options} />
           </div>
         ) : selectedEvent ? (
-          <p className="text-center text-gray-600 text-lg">Loading analytics data...</p>
+          <p className="text-center text-gray-600 text-lg">
+            Loading analytics data...
+          </p>
         ) : (
           <div className="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-16 shadow-inner border border-black">
             <BarChart2 className="w-24 h-24 text-gray-300 mb-6" />
-            <h2 className="text-2xl font-semibold text-black mb-2">No Event Selected</h2>
+            <h2 className="text-2xl font-semibold text-black mb-2">
+              No Event Selected
+            </h2>
             <p className="text-gray-600 text-center max-w-md mb-6">
-              Please select an event from the dropdown above to view detailed registration analytics.
+              Please select an event from the dropdown above to view detailed
+              registration analytics.
             </p>
             <button
               onClick={() => {
                 if (selectRef.current) {
                   selectRef.current.focus();
-                  const event = new KeyboardEvent("keydown", { key: "ArrowDown" });
+                  const event = new KeyboardEvent("keydown", {
+                    key: "ArrowDown",
+                  });
                   selectRef.current.dispatchEvent(event);
                 }
               }}

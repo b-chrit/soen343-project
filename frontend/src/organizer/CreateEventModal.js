@@ -148,34 +148,49 @@ export default function CreateEventModal({ show, onClose, onSubmit }) {
             ></textarea>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-1">Capacity</label>
-              <input
-                type="number"
-                name="capacity"
-                value={formData.capacity}
-                onChange={handleChange}
-                placeholder="Max attendees"
-                className="border border-gray-300 rounded-md py-2 px-3"
-              />
-            </div>
+          <div className="grid grid-cols-3 gap-4">
+  <div className="flex flex-col">
+    <label className="text-sm font-semibold mb-1">Capacity</label>
+    <input
+      type="number"
+      name="capacity"
+      value={formData.capacity}
+      onChange={handleChange}
+      placeholder="Max attendees"
+      className="border border-gray-300 rounded-md py-2 px-3"
+    />
+  </div>
 
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-1">Event Type</label>
-              <select
-                name="event_type"
-                value={formData.event_type}
-                onChange={handleChange}
-                className="border border-gray-300 rounded-md py-2 px-3"
-              >
-                <option value="">Select Type</option>
-                <option value="Online">Online</option>
-                <option value="In-Person">In-Person</option>
-                <option value="Hybrid">Hybrid</option>
-              </select>
-            </div>
-          </div>
+  <div className="flex flex-col">
+    <label className="text-sm font-semibold mb-1">Event Type</label>
+    <select
+      name="event_type"
+      value={formData.event_type}
+      onChange={handleChange}
+      className="border border-gray-300 rounded-md py-2 px-3"
+    >
+      <option value="">Select Type</option>
+      <option value="Online">Online</option>
+      <option value="In-Person">In-Person</option>
+      <option value="Hybrid">Hybrid</option>
+    </select>
+  </div>
+
+  <div className="flex flex-col">
+    <label className="text-sm font-semibold mb-1">Fee ($)</label>
+    <input
+      type="number"
+      name="registration_fee"
+      value={formData.registration_fee}
+      onChange={handleChange}
+      step="0.01"
+      min="0"
+      placeholder="0.00"
+      className="border border-gray-300 rounded-md py-2 px-3"
+    />
+  </div>
+</div>
+
 
           <div className="flex justify-end">
             <button

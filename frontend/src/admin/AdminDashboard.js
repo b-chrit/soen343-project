@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // Import useLocation
-import { Users, BarChart, CreditCard, CalendarPlus } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Users, BarChart, CreditCard, CalendarPlus, ArrowRight  } from "lucide-react";
 import HeaderBar from "../HeaderBar";
 
 // Admin Dashboard component
@@ -149,12 +149,13 @@ export default function AdminDashboard() {
 
         {hasMoreUsers && (
           <div className="text-center mt-4">
-            <button
-              onClick={() => navigate("/manage-users")}
-              className="bg-black text-white py-3 px-8 rounded-lg transition-all duration-300 border border-black hover:bg-white hover:text-black hover:scale-105 hover:shadow-md"
-            >
-              View More
-            </button>
+        <button
+  onClick={() => navigate("/manage-users")}
+  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-black to-gray-800 text-white font-semibold tracking-wide py-3 px-8 rounded-full border border-black shadow-sm hover:from-white hover:to-white hover:text-black hover:shadow-lg hover:scale-105 transition-all duration-300"
+>
+  View More
+  <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+</button>
           </div>
         )}
       </section>
@@ -185,14 +186,6 @@ const UserCard = ({ name, email, status, navigate }) => (
       <h4 className="text-xl font-bold mb-2">{name}</h4>
       <p className="text-gray-600 text-sm mb-1">Email: {email}</p>
       <p className="text-gray-600 text-sm">Status: {status}</p>
-    </div>
-    <div className="flex justify-end mt-6">
-      <button
-        onClick={() => navigate("/manage-users")}
-        className="bg-black text-white py-2 px-6 rounded-lg text-sm transition-all duration-300 hover:bg-white hover:text-black border border-black hover:scale-105"
-      >
-        Manage
-      </button>
     </div>
   </div>
 );
