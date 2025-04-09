@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, Users, Calendar, MapPin, DollarSign, Eye } from "lucide-react";
+import { ChevronLeft, Users, Calendar, MapPin, DollarSign, Eye, Check } from "lucide-react";
 import HeaderBar from "../HeaderBar";
 import EventsTable from "../EventsTable";
 import SearchAndFilter from "../SearchAndFilter";
@@ -49,6 +49,9 @@ export default function MyEvents() {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalEvent, setModalEvent] = useState(null);
+
+  // Success message state
+  const [actionSuccess, setActionSuccess] = useState(null);
 
   const userType = localStorage.getItem("user_type");
 
@@ -177,12 +180,12 @@ export default function MyEvents() {
   const handleSponsorshipRequest = async () => {
     // Ensure an event and a stakeholder have been selected
     if (!selectedEvent) {
-      alert("Please select an event to sponsor.");
+      setError("Please select an event to sponsor.");
       return;
     }
     
     if (!selectedStakeholder) {
-      alert("Please select a stakeholder to sponsor this event.");
+      setError("Please select a stakeholder to sponsor this event.");
       return;
     }
   
@@ -227,62 +230,23 @@ export default function MyEvents() {
       setEventsData(updatedEvents);
       setFilteredEvents(updatedEvents);
       
+      // Set success message
+      setActionSuccess("Sponsorship request sent successfully!");
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setActionSuccess(null);
+      }, 3000);
+      
       // Reset selection mode
       resetSponsorshipMode();
-      
-      alert("Sponsorship request sent successfully!");
     } catch (err) {
-      alert(err.message);
-    }
-  };
-  
-  const handleCancelRequest = async (eventId) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-    
-    // Find the event to get associated stakeholder information if needed
-    const eventToCancel = eventsData.find(e => e.id === eventId);
-    if (!eventToCancel) return;
-  
-    try {
-      const response = await fetch("http://localhost:5003/organizer/cancel_request", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          event_id: eventId,
-          // If needed, we would include stakeholder_id here
-        }),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Cancellation failed");
-      }
-  
-      // Update the event's sponsorship status
-      const updatedEvents = eventsData.map((e) =>
-        e.id === eventId
-          ? { 
-              ...e, 
-              sponsorshipStatus: "N/A", 
-              sponsorshipColor: getSponsorshipColor("N/A"),
-              sponsor: "None"
-            }
-          : e
-      );
-  
-      setEventsData(updatedEvents);
-      setFilteredEvents(updatedEvents);
+      setError(err.message);
       
-      alert("Sponsorship request cancelled successfully.");
-    } catch (err) {
-      alert(err.message);
+      // Clear error message after 3 seconds
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
     }
   };
   
@@ -345,6 +309,31 @@ export default function MyEvents() {
           </button>
           <h1 className="text-3xl font-bold uppercase tracking-wide">My Events</h1>
         </div>
+
+        {/* Success Message */}
+        {actionSuccess && (
+          <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <Check className="h-5 w-5 text-green-500" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-700">{actionSuccess}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+            <div className="flex">
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Search & Filter or Sponsorship UI */}
         <div className="flex justify-between items-center mb-6">
@@ -461,19 +450,9 @@ export default function MyEvents() {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
           </div>
         )}
-        
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Events Table */}
-        {!loading && !error && (
+        {!loading && (
           <div className={sponsorshipMode ? "opacity-95 transition-opacity duration-300" : ""}>
             <EventsTable
               events={displayedEvents}
@@ -523,21 +502,7 @@ export default function MyEvents() {
                 {
                   label: "Sponsor",
                   accessor: "sponsor",
-                  width: "w-1/6",
-                  render: (value, evt) => (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">{value}</span>
-                      {!sponsorshipMode && evt.sponsorshipStatus === "PENDING" && (
-                        <button
-                          onClick={() => handleCancelRequest(evt.id)}
-                          className="ml-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600 transition"
-                          title="Cancel request"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </div>
-                  ),
+                  width: "w-1/6"
                 },
               ]}
               currentPage={currentPage}

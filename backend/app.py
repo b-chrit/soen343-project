@@ -10,7 +10,15 @@ from views.event_route import CreateEventResource, GetEventResource, DeleteEvent
 from views.admin_route import GetUsersResource, DeleteUserResource
 from views.organizer_route import GetOrganizerEventResource, RequestSponsorshipResource
 from views.user_routes import UpdatePasswordResource, GetUserProfile, EditProfileResource, GetAllStakeholdersResource
-from views.stakeholder_route import CheckSponsorshipResource, SponsorEventResource, CancelSponsorshipResource, SponsoredEventsResource
+from views.stakeholder_route import (
+    CheckSponsorshipResource, 
+    SponsorEventResource, 
+    CancelSponsorshipResource, 
+    SponsoredEventsResource,
+    SponsorshipRequestsResource,
+    AcceptSponsorshipResource,
+    RejectSponsorshipResource
+)
 
 from controllers import Controller
 from models import db
@@ -59,13 +67,17 @@ with app.app_context():
     api.add_resource(GetOrganizerEventResource, '/organizer/get_event')
     api.add_resource(RequestSponsorshipResource, '/organizer/request_sponsorship')
     
-
-
+    # Stakeholder routes
     api.add_resource(SponsorEventResource, '/stakeholder/sponsor_event')
     api.add_resource(CancelSponsorshipResource, '/stakeholder/cancel_sponsorship')
     api.add_resource(CheckSponsorshipResource, '/stakeholder/check_sponsorship')
     api.add_resource(GetAllStakeholdersResource, '/stakeholder/get_all')
     api.add_resource(SponsoredEventsResource, '/stakeholder/sponsored_events')
+    
+    # New sponsorship request routes
+    api.add_resource(SponsorshipRequestsResource, '/stakeholder/sponsorship_requests')
+    api.add_resource(AcceptSponsorshipResource, '/stakeholder/accept_sponsorship')
+    api.add_resource(RejectSponsorshipResource, '/stakeholder/reject_sponsorship')
 
 if __name__ == "__main__":
     app.run(debug=True, port=5003)

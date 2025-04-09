@@ -96,10 +96,38 @@ class Event(db.Model):
         db.session.remove(event)
         db.session.commit()
 
-  
     def get_data(self) -> dict:
-        from .users.organizer import Organizer
+        from models.users.organizer import Organizer
+        from models.users.stakeholder import Stakeholder
+        from models import SponsorshipRequest
+    
         organizer : Organizer = Organizer.find(user_id=self.__organizer_id)
+    
+        sponsorship_status = "N/A"
+        sponsor_name = "None"
+    
+        if self.__sponsor_id:
+            sponsorship_status = "ACCEPTED"
+            stakeholder = Stakeholder.find(self.__sponsor_id)
+            if stakeholder:
+                sponsor_name = f"{stakeholder.get_first_name()} {stakeholder.get_last_name()}"
+            else:
+                sponsor_name = str(self.__sponsor_id)
+        else:
+            # Check the sponsorship_requests table for the most recent request for this event
+            request = SponsorshipRequest.query.filter_by(event_id=self.id).order_by(SponsorshipRequest.id.desc()).first()
+            if request:
+                if request.status == "REJECTED":
+                    sponsorship_status = "REJECTED"
+                    stakeholder = Stakeholder.find(request.stakeholder_id)
+                    if stakeholder:
+                        sponsor_name = f"{stakeholder.get_first_name()} {stakeholder.get_last_name()} (Rejected)"
+                elif request.status == "PENDING":
+                    sponsorship_status = "PENDING"
+                    stakeholder = Stakeholder.find(request.stakeholder_id)
+                    if stakeholder:
+                        sponsor_name = f"{stakeholder.get_first_name()} {stakeholder.get_last_name()} (Pending)"
+    
         data : dict = {
             'id'                : self.id,
             'title'             : self.__title,
@@ -108,14 +136,15 @@ class Event(db.Model):
             'location'          : self.__location,
             'start'             : str(self.__start),
             'end'               : str(self.__end),
-            'capacity'          : self.__capacity,
+                'capacity'          : self.__capacity,
             'registrations'     : len(self.registrations),
             'event_type'        : self.__event_type,
             'organizer_name'    : f'{organizer.get_first_name()} {organizer.get_last_name()}',
             'organization_name' : organizer.get_organization_name(),
-            'sponsor_name'      : self.__sponsor_id,
+            'sponsor_name'      : sponsor_name,
             'sponsored'         : True if self.__sponsor_id else False,
-            'fee'               : self.__registration_fee
+            'fee'               : self.__registration_fee,
+            'sponsorship_status': sponsorship_status
         }
         return data
 
