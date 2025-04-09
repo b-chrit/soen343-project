@@ -100,28 +100,24 @@ export default function OrganizerDashBoard() {
       </section>
 
       {/* ✅ Quick Actions */}
-      <section className="px-16 py-10 grid grid-cols-1 md:grid-cols-4 gap-6">
-        <ActionCard
-          label="Create Event"
-          icon={<CalendarPlus className="w-8 h-8" />}
-          onClick={handleCreateEventClick}
-        />
-        <ActionCard
-          label="My Events"
-          icon={<FolderPlus className="w-8 h-8" />}
-          onClick={() => navigate("/my-events")}
-        />
-        <ActionCard
-          label="Request Sponsorship"
-          icon={<Handshake className="w-8 h-8" />}
-          onClick={() => navigate("/request-sponsorship")}
-        />
-        <ActionCard
-          label="View Analytics"
-          icon={<BarChart className="w-8 h-8" />}
-          onClick={() => navigate("/analytics")}
-        />
-      </section>
+{/* ✅ Quick Actions */}
+<section className="px-16 py-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+  <ActionCard
+    label="Create Event"
+    icon={<CalendarPlus className="w-8 h-8" />}
+    onClick={handleCreateEventClick}
+  />
+  <ActionCard
+    label="My Events & Sponsorships"
+    icon={<FolderPlus className="w-8 h-8" />}
+    onClick={() => navigate("/my-events")}
+  />
+  <ActionCard
+    label="View Analytics"
+    icon={<BarChart className="w-8 h-8" />}
+    onClick={() => navigate("/analytics")}
+  />
+</section>
 
       {/* ✅ Events Summary */}
       <section className="px-16 py-10">
