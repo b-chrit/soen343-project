@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { CheckCircle, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Calendar from "../Calendar";
 
 export default function MyEventsModal({
   event,
@@ -120,8 +121,9 @@ export default function MyEventsModal({
   if (!event) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-8 w-full max-w-3xl rounded-lg relative shadow-lg border border-gray-300">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-20 space-x-20">
+      
+      <div className="bg-white p-8 w-full max-w-3xl h-[50%] rounded-lg relative shadow-lg border border-gray-300">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -329,6 +331,10 @@ export default function MyEventsModal({
   )}
 </div>
 
+      </div>
+      <div className="bg-white h-[50%] rounded-lg w-full p-4 pb-8 flex flex-col">
+        <h1>Shared Calendar</h1>
+        <Calendar event_id={event.id}/>
       </div>
     </div>
   );

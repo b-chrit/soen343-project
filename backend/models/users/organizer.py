@@ -65,6 +65,7 @@ class Organizer(User):
         capacity: int,
         event_type: str,
         registration_fee : float,
+        calendar_id: str = None,
         sponsor_id: int = None  # Optional if not always used
     ):
         new_event = Event(
@@ -78,7 +79,8 @@ class Organizer(User):
             event_type=event_type,
             organizer_id=self.id,
             sponsor_id=sponsor_id,
-            registration_fee= registration_fee
+            registration_fee= registration_fee,
+            calendar_id=calendar_id
         )
 
         db.session.add(new_event)

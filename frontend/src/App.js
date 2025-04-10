@@ -17,6 +17,7 @@ import AdminEventsPage from "./admin/AdminEventsPage";
 import AccountsTable from "./admin/AccountsTable"; //Import accountsTable component
 import GuestDashboard from "./guest/GuestDashboard";
 import GuestEventsPage from "./guest/GuestEventsPage"; 
+import Calendar from "./Calendar";
 
 export default function App() {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/admin-dashboard" element={isAuthenticated && userType === "admin" ? <AdminDashboard /> : <Navigate to="/login" />} />
           <Route path="/manage-users" element={isAuthenticated && userType === "admin" ? <UserManagement /> : <Navigate to="/login" />} />
           <Route path="/calendar" element={isAuthenticated ? <CalendarView onBack={handleBack}/> : <Navigate to="/login" />} />
+          <Route path="/event-calendar" element={isAuthenticated ? <Calendar/> : <Navigate to="/login" />} />
           <Route path="/events" element={isAuthenticated ? <EventsPage onBack={handleBack} /> : <Navigate to="/login" />} />
           <Route path="/profile" element={isAuthenticated ? <ProfilePage onBack={handleBack} /> : <Navigate to="/login" />} />
           <Route path="/accounts-table" element={isAuthenticated ? <AccountsTable/> : <Navigate to="/login" />} />

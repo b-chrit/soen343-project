@@ -1,6 +1,7 @@
 from models.request_sponserships import SponsorshipRequest
 from models.users.organizer import Organizer
 from models import Event, Stakeholder, User, db 
+from controllers import CalendarController
 
 class StakeholderController:
 
@@ -23,6 +24,7 @@ class StakeholderController:
 
         # Set the sponsor (stakeholder) to the event
         event.set_sponsor(stakeholder.get_id())
+        CalendarController.share_calendar(event.get_calendar(),stakeholder.get_email())
 
         return {"status": "sponsored", "event_id": event_id}
 

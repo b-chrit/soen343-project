@@ -1,5 +1,5 @@
 from models         import Event, User, Organizer, Stakeholder, Attendee, db, Registration
-from controllers    import PaymentController
+from controllers    import PaymentController, CalendarController
 
 from datetime       import datetime
 
@@ -27,7 +27,8 @@ class EventController:
             location    = location,
             capacity    = capacity,
             event_type  = event_type,
-            registration_fee = registration_fee
+            registration_fee = registration_fee,
+            calendar_id = CalendarController.create_calendar(title, organizer.get_email())
         )
 
         return event_id
@@ -157,3 +158,11 @@ class EventController:
     def get_analytics( event_id : int, group_by: str = 'day' ):
         analytics = Registration.get_analytics(event_id, group_by)
         return analytics
+    
+    def get_calendar( event_id : int):
+        event       : Event     = Event.find(event_id)
+
+        if not event:
+            raise Event.EventError.NotFound()
+        
+        return event.get_calendar()
