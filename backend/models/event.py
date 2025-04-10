@@ -37,6 +37,7 @@ class Event(db.Model):
 
     __organizer_id      = db.Column('organizer_id', db.Integer,     db.ForeignKey('organizers.id'), nullable=False)
     __sponsor_id        = db.Column('sponsor_id', db.Integer,     db.ForeignKey('stakeholders.id'), nullable=True)
+    __calendar_id       = db.Column('calendar_id', db.String, nullable=True)
 
     registrations       = db.relationship('Registration', back_populates='event', cascade='all, delete-orphan')
     
@@ -45,7 +46,7 @@ class Event(db.Model):
     #sponsor = db.relationship("Stakeholder", backref="sponsored_events", uselist=False)
 
     # Constructor
-    def __init__( self, title: str, start: datetime, end: datetime, category: str, description: str, location: str, registration_fee : float, organizer_id: int, sponsor_id: int = None, capacity: int = 100, event_type: str = "In-person", registrations: int = 0 ):
+    def __init__( self, title: str, start: datetime, end: datetime, category: str, description: str, location: str, registration_fee : float, organizer_id: int, sponsor_id: int = None, capacity: int = 100, event_type: str = "In-person", calendar_id: str = None ):
         
         self.__title            = title
         self.__start            = start
@@ -58,6 +59,7 @@ class Event(db.Model):
         self.__capacity         = capacity
         self.__event_type       = event_type
         self.__registration_fee = registration_fee
+        self.__calendar_id      = calendar_id
 
 
 
@@ -245,3 +247,9 @@ class Event(db.Model):
         self.__sponsor_id = sponsor_id
         db.session.commit()
 
+    def set_calendar(self, calendar_id : str):
+        self.__calendar_id = calendar_id
+        db.session.commit()
+
+    def get_calendar(self):
+        return self.__calendar_id

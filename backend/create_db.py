@@ -13,7 +13,7 @@ with app.app_context():
     # --- Organizer Factory Helper ---
     def make_organizer(index):
         return OrganizerController.create_organizer(
-            f'organizer{index}@example.com',
+            f'sees-organizer{index}@yopmail.com',
             'password123',
             f'Organizer{index}',
             f'Last{index}',

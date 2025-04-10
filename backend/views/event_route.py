@@ -150,3 +150,22 @@ class GetAnalyticsResource(Resource):
                 'status'    : 'error',
                 'code'      : str(e)
             }, HTTP_code if HTTP_code else 400
+
+
+
+class GetCalendarResource(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument( 'event_id', location = 'args', type = int, required = True )
+        try:
+            args        : reqparse.Namespace    = parser.parse_args()
+            event_id    : int                   = args.get('event_id')
+            
+            calendar = {'calendar' :EventController.get_calendar( event_id )}
+            return calendar, 200
+        except Exception as e:
+            HTTP_code : str = getattr(e, 'HTTP_code', None)
+            return {
+                'status'    : 'error',
+                'code'      : str(e)
+            }, HTTP_code if HTTP_code else 400

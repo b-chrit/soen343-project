@@ -1,5 +1,7 @@
 flask-jwt-extended
 flask-restful
+google-api-python-client
+google-auth
 SQLAlchemy
 flask-cors
 stripe
