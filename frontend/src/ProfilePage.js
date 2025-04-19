@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, Eye, EyeOff } from "lucide-react";
+import { ChevronLeft, Eye, EyeOff, User, Mail, Phone, Building, Check, AlertCircle } from "lucide-react";
 import HeaderBar from "./HeaderBar";
 import { useNavigate } from "react-router-dom";
-import SuggestedEvents from "./SuggestedEvents";
 
 export default function ProfilePage({ onBack }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -14,15 +13,15 @@ export default function ProfilePage({ onBack }) {
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
-    phone_number: "",   // For Organizer
-    organization_name: "", // For Organizer
+    phone_number: "",
+    organization_name: "",
   });
   const [initialFormData, setInitialFormData] = useState({
     first_name: "",
     last_name: "",
     email: "",
-    phone_number: "",  // For Organizer
-    organization_name: "",  // For Organizer
+    phone_number: "",
+    organization_name: "",
   });
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -34,8 +33,9 @@ export default function ProfilePage({ onBack }) {
 
   const navigate = useNavigate();
 
-  // ✅ Get the user type from localStorage
+  // Get the user type from localStorage
   const userType = localStorage.getItem("user_type");
+  const isOrganizer = userType?.toLowerCase() === "organizer";
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -65,8 +65,8 @@ export default function ProfilePage({ onBack }) {
           first_name: userData.first_name,
           last_name: userData.last_name,
           email: userData.email,
-          phone_number: userData.phone_number || "",  // For Organizer
-          organization_name: userData.organization_name || "",  // For Organizer
+          phone_number: userData.phone_number || "",
+          organization_name: userData.organization_name || "",
         });
 
         setFormData({
@@ -76,8 +76,8 @@ export default function ProfilePage({ onBack }) {
           currentPassword: "",
           newPassword: "",
           confirmPassword: "",
-          phone_number: userData.phone_number || "",  // For Organizer
-          organization_name: userData.organization_name || "",  // For Organizer
+          phone_number: userData.phone_number || "",
+          organization_name: userData.organization_name || "",
         });
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -92,8 +92,14 @@ export default function ProfilePage({ onBack }) {
   };
 
   const handleEditClick = () => setIsEditing(true);
+  
   const handleCancelClick = () => {
-    setFormData(initialFormData);
+    setFormData({
+      ...initialFormData,
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
     setIsEditing(false);
   };
 
@@ -103,19 +109,25 @@ export default function ProfilePage({ onBack }) {
 
     try {
       const token = localStorage.getItem("token");
+      const updateData = {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email,
+      };
+
+      // Only include organizer fields if user is an organizer
+      if (isOrganizer) {
+        updateData.phone_number = formData.phone_number;
+        updateData.organization_name = formData.organization_name;
+      }
+
       const response = await fetch("http://localhost:5003/user/edit_profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          email: formData.email,
-          phone_number: formData.phone_number,   // For Organizer
-          organization_name: formData.organization_name,  // For Organizer
-        }),
+        body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {
@@ -128,6 +140,16 @@ export default function ProfilePage({ onBack }) {
 
       console.log("Profile updated successfully");
       setUpdateStatus("success");
+      
+      // Update initialFormData to reflect the changes
+      setInitialFormData({
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email,
+        phone_number: formData.phone_number,
+        organization_name: formData.organization_name,
+      });
+      
       setTimeout(() => {
         setUpdateStatus("");
         setUpdateError("");
@@ -138,7 +160,16 @@ export default function ProfilePage({ onBack }) {
   };
 
   const handlePasswordChangeClick = () => setIsChangingPassword(true);
-  const handleCancelPasswordChange = () => setIsChangingPassword(false);
+  
+  const handleCancelPasswordChange = () => {
+    setIsChangingPassword(false);
+    setFormData({
+      ...formData,
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+  };
 
   const handleConfirmPasswordChange = async () => {
     console.log("Submitting password change:", formData);
@@ -178,6 +209,14 @@ export default function ProfilePage({ onBack }) {
       console.log("Password updated successfully");
       setUpdateStatus("success");
       setIsChangingPassword(false);
+      
+      // Clear password fields
+      setFormData({
+        ...formData,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
 
       setTimeout(() => {
         setUpdateStatus("");
@@ -211,171 +250,263 @@ export default function ProfilePage({ onBack }) {
 
       <div className="px-16 py-8 flex flex-col">
         <div className="flex items-center space-x-4 mb-8">
-          <button onClick={onBack} className="p-2">
+          <button 
+            onClick={onBack} 
+            className="p-2 hover:bg-gray-100 rounded-full transition duration-200"
+          >
             <ChevronLeft className="w-7 h-7" />
           </button>
           <h1 className="text-4xl font-bold uppercase">My Profile</h1>
         </div>
 
-        <div className="border border-black rounded-lg p-12 w-[600px] mx-auto">
-          <div className="flex items-start">
-            <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-500 text-4xl">👤</span>
+        <div className="border border-black rounded-lg p-12 w-[600px] mx-auto shadow-md bg-white">
+          {/* Profile header with avatar */}
+          <div className="flex items-center mb-8">
+            <div className="w-24 h-24 rounded-full bg-black text-white flex items-center justify-center shadow-md">
+              <User className="w-12 h-12" />
+            </div>
+            <div className="ml-6">
+              <h2 className="text-2xl font-bold">
+                {formData.first_name} {formData.last_name}
+              </h2>
+              <div className="mt-1 inline-flex items-center px-3 py-1 rounded-full bg-gray-200 text-gray-800 text-sm font-semibold">
+                {userType ? userType.toUpperCase() : "USER"}
+              </div>
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-6">
-            {Object.keys(formData).map((key) => {
-              if (
-                key !== "currentPassword" &&
-                key !== "newPassword" &&
-                key !== "confirmPassword"
-              ) {
-                return (
-                  <div key={key} className={`flex flex-col ${key === "email" ? "col-span-2" : ""}`}>
-                    <label className="text-sm text-gray-700">
-                      {key.replace("_", " ").toUpperCase()}
-                    </label>
+          {/* Status message */}
+          {updateStatus && (
+            <div
+              className={`mb-6 p-4 rounded-lg flex items-center ${
+                updateStatus === "success" 
+                ? "bg-gray-100 border-l-4 border-green-500 text-green-700" 
+                : "bg-gray-100 border-l-4 border-red-500 text-red-700"
+              }`}
+            >
+              {updateStatus === "success" ? (
+                <Check className="w-5 h-5 mr-2" />
+              ) : (
+                <AlertCircle className="w-5 h-5 mr-2" />
+              )}
+              <span>
+                {updateStatus === "success"
+                  ? "Profile updated successfully!"
+                  : updateError || "An error occurred."}
+              </span>
+            </div>
+          )}
+
+          {/* Profile edit form */}
+          {!isChangingPassword ? (
+            <div className="space-y-8">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">FIRST NAME</label>
+                  <div className="relative">
                     <input
                       type="text"
-                      name={key}
-                      value={formData[key]}
+                      name="first_name"
+                      value={formData.first_name}
                       onChange={handleChange}
-                      className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg"
+                      className={`border ${isEditing ? 'border-black' : 'border-gray-400'} py-3 px-4 rounded-md w-full text-lg focus:outline-none focus:ring-2 focus:ring-black transition-all duration-200`}
                       readOnly={!isEditing}
                     />
                   </div>
-                );
-              }
-              return null;
-            })}
-          </div>
+                </div>
 
-          {isChangingPassword && (
-            <div className="mt-6">
-              <div className="flex flex-col">
-                <label className="text-sm text-gray-700">Current Password</label>
-                <div className="relative">
-                  <input
-                    type={showCurrentPassword ? "text" : "password"}
-                    name="currentPassword"
-                    value={formData.currentPassword}
-                    onChange={handleChange}
-                    className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg"
-                  />
-                  <span
-                    onClick={toggleCurrentPassword}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                  >
-                    {showCurrentPassword ? <EyeOff /> : <Eye />}
-                  </span>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">LAST NAME</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="last_name"
+                      value={formData.last_name}
+                      onChange={handleChange}
+                      className={`border ${isEditing ? 'border-black' : 'border-gray-400'} py-3 px-4 rounded-md w-full text-lg focus:outline-none focus:ring-2 focus:ring-black transition-all duration-200`}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 col-span-2">
+                  <label className="text-sm font-semibold text-gray-700">EMAIL</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className={`border ${isEditing ? 'border-black' : 'border-gray-400'} py-3 px-4 rounded-md w-full text-lg focus:outline-none focus:ring-2 focus:ring-black transition-all duration-200 pl-10`}
+                      readOnly={!isEditing}
+                    />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+                  </div>
+                </div>
+
+                {/* Organizer-specific fields */}
+                {isOrganizer && (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-gray-700">PHONE NUMBER</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="phone_number"
+                          value={formData.phone_number}
+                          onChange={handleChange}
+                          className={`border ${isEditing ? 'border-black' : 'border-gray-400'} py-3 px-4 rounded-md w-full text-lg focus:outline-none focus:ring-2 focus:ring-black transition-all duration-200 pl-10`}
+                          readOnly={!isEditing}
+                        />
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-gray-700">ORGANIZATION NAME</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="organization_name"
+                          value={formData.organization_name}
+                          onChange={handleChange}
+                          className={`border ${isEditing ? 'border-black' : 'border-gray-400'} py-3 px-4 rounded-md w-full text-lg focus:outline-none focus:ring-2 focus:ring-black transition-all duration-200 pl-10`}
+                          readOnly={!isEditing}
+                        />
+                        <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+                {isEditing ? (
+                  <>
+                    <button
+                      className="py-3 px-8 rounded bg-gray-100 text-black font-medium border border-gray-300 hover:bg-gray-200 transition duration-200"
+                      onClick={handleCancelClick}
+                    >
+                      CANCEL
+                    </button>
+                    <button
+                      className="py-3 px-8 rounded bg-black text-white font-medium border border-black hover:bg-white hover:text-black transition duration-200"
+                      onClick={handleProfileUpdate}
+                    >
+                      SAVE CHANGES
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="py-3 px-8 rounded bg-gray-100 text-black font-medium border border-gray-300 hover:bg-gray-200 transition duration-200"
+                      onClick={handlePasswordChangeClick}
+                    >
+                      CHANGE PASSWORD
+                    </button>
+                    <button
+                      className="py-3 px-8 rounded bg-black text-white font-medium border border-black hover:bg-white hover:text-black transition duration-200"
+                      onClick={handleEditClick}
+                    >
+                      EDIT PROFILE
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Password change form */
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold border-b border-gray-200 pb-2">Change Password</h3>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">CURRENT PASSWORD</label>
+                  <div className="relative">
+                    <input
+                      type={showCurrentPassword ? "text" : "password"}
+                      name="currentPassword"
+                      value={formData.currentPassword}
+                      onChange={handleChange}
+                      className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg focus:outline-none focus:ring-2 focus:ring-black transition-all duration-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleCurrentPassword}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black transition duration-200"
+                    >
+                      {showCurrentPassword ? 
+                        <EyeOff className="w-5 h-5" /> : 
+                        <Eye className="w-5 h-5" />
+                      }
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">NEW PASSWORD</label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      name="newPassword"
+                      value={formData.newPassword}
+                      onChange={handleChange}
+                      className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg focus:outline-none focus:ring-2 focus:ring-black transition-all duration-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleNewPassword}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black transition duration-200"
+                    >
+                      {showNewPassword ? 
+                        <EyeOff className="w-5 h-5" /> : 
+                        <Eye className="w-5 h-5" />
+                      }
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">CONFIRM NEW PASSWORD</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg focus:outline-none focus:ring-2 focus:ring-black transition-all duration-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleConfirmPassword}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black transition duration-200"
+                    >
+                      {showConfirmPassword ? 
+                        <EyeOff className="w-5 h-5" /> : 
+                        <Eye className="w-5 h-5" />
+                      }
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-col mt-4">
-                <label className="text-sm text-gray-700">New Password</label>
-                <div className="relative">
-                  <input
-                    type={showNewPassword ? "text" : "password"}
-                    name="newPassword"
-                    value={formData.newPassword}
-                    onChange={handleChange}
-                    className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg"
-                  />
-                  <span
-                    onClick={toggleNewPassword}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                  >
-                    {showNewPassword ? <EyeOff /> : <Eye />}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-col mt-4">
-                <label className="text-sm text-gray-700">Confirm New Password</label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="border border-gray-400 py-3 px-4 rounded-md w-full text-lg"
-                  />
-                  <span
-                    onClick={toggleConfirmPassword}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                  >
-                    {showConfirmPassword ? <EyeOff /> : <Eye />}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex justify-end mt-4 space-x-4">
+              <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
                 <button
-                  className="py-2 px-6 bg-gray-300 text-black font-medium border border-gray-500 transition hover:bg-gray-400"
+                  className="py-3 px-8 rounded bg-gray-100 text-black font-medium border border-gray-300 hover:bg-gray-200 transition duration-200"
                   onClick={handleCancelPasswordChange}
                 >
-                  Cancel
+                  CANCEL
                 </button>
                 <button
-                  className="py-2 px-6 bg-black text-white font-medium border border-black transition hover:bg-white hover:text-black"
+                  className="py-3 px-8 rounded bg-black text-white font-medium border border-black hover:bg-white hover:text-black transition duration-200"
                   onClick={handleConfirmPasswordChange}
                 >
-                  Confirm
+                  UPDATE PASSWORD
                 </button>
               </div>
-            </div>
-          )}
-
-          {updateStatus && (
-            <div
-              className={`mt-4 ${updateStatus === "success" ? "text-green-500" : "text-red-500"}`}
-            >
-              {updateStatus === "success"
-                ? "Profile updated successfully!"
-                : updateError || "An error occurred."}
-            </div>
-          )}
-
-          {!isChangingPassword && (
-            <div className="flex justify-end mt-6 space-x-4">
-              {isEditing ? (
-                <>
-                  <button
-                    className="py-2 px-6 bg-gray-300 text-black font-medium border border-gray-500 transition hover:bg-gray-400"
-                    onClick={handleCancelClick}
-                  >
-                    CANCEL
-                  </button>
-                  <button
-                    className="py-2 px-6 bg-black text-white font-medium border border-black transition hover:bg-white hover:text-black"
-                    onClick={handleProfileUpdate}
-                  >
-                    CONFIRM
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    className="py-2 px-6 bg-black text-white font-medium border border-black transition hover:bg-white hover:text-black"
-                    onClick={handleEditClick}
-                  >
-                    EDIT
-                  </button>
-                  <button
-                    className="py-2 px-6 bg-black text-white font-medium border border-black transition hover:bg-white hover:text-black"
-                    onClick={handlePasswordChangeClick}
-                  >
-                    CHANGE PASSWORD
-                  </button>
-                </>
-              )}
             </div>
           )}
         </div>
-      </div>
-      <div className="mb-20 mx-auto">
-        <SuggestedEvents />
       </div>
 
       {/* FOOTER */}
