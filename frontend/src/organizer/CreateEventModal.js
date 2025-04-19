@@ -10,7 +10,7 @@ export default function CreateEventModal({ show, onClose, onSubmit }) {
     location: "",
     capacity: "",
     event_type: "",
-    registration_fee:"0"
+    registration_fee: "0"
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -23,13 +23,32 @@ export default function CreateEventModal({ show, onClose, onSubmit }) {
     }));
   };
 
+  // Format datetime to match exactly what the backend expects: yyyy-MM-ddThh:mm
+  const formatDateTime = (dateTimeString) => {
+    if (!dateTimeString) return "";
+    
+    try {
+      const date = new Date(dateTimeString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (e) {
+      console.error("Date formatting error:", e);
+      return dateTimeString;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
     // Validate fields
-    const requiredFields = Object.values(formData).every((v) => v.trim() !== "");
+    const requiredFields = Object.values(formData).every((v) => v.toString().trim() !== "");
     if (!requiredFields) {
       setError("Please fill in all fields.");
       return;
@@ -37,6 +56,17 @@ export default function CreateEventModal({ show, onClose, onSubmit }) {
 
     try {
       const token = localStorage.getItem("token");
+      
+      // Format the data to match what the backend expects
+      const formattedData = {
+        ...formData,
+        start: formatDateTime(formData.start),
+        end: formatDateTime(formData.end),
+        capacity: parseInt(formData.capacity),
+        registration_fee: parseFloat(formData.registration_fee)
+      };
+      
+      console.log("Sending data:", formattedData);
 
       const response = await fetch("http://localhost:5003/event/create", {
         method: "POST",
@@ -44,19 +74,39 @@ export default function CreateEventModal({ show, onClose, onSubmit }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formattedData),
       });
 
       if (response.ok) {
         setSuccess("Event created successfully!");
+        // Reset form data
+        setFormData({
+          title: "",
+          start: "",
+          end: "",
+          category: "",
+          description: "",
+          location: "",
+          capacity: "",
+          event_type: "",
+          registration_fee: "0"
+        });
+        
+        // Close modal after delay
         setTimeout(() => {
           onClose();
+          // If there's a callback to refresh events list
+          if (typeof onSubmit === 'function') {
+            onSubmit();
+          }
         }, 1500);
       } else {
-        const data = await response.json();
-        setError(data.error || "Failed to create event. Try again.");
+        const errorData = await response.json();
+        console.error("Server error:", errorData);
+        setError(errorData.code || "Failed to create event. Try again.");
       }
     } catch (err) {
+      console.error("Request error:", err);
       setError("Something went wrong. Please try again later.");
     }
   };
@@ -116,13 +166,20 @@ export default function CreateEventModal({ show, onClose, onSubmit }) {
 
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-1">Category</label>
-            <input
+            <select
               name="category"
               value={formData.category}
               onChange={handleChange}
-              placeholder="Category"
               className="border border-gray-300 rounded-md py-2 px-3"
-            />
+            >
+              <option value="">Select Category</option>
+              <option value="Technology">Technology</option>
+              <option value="Finance">Finance</option>
+              <option value="Business">Business</option>
+              <option value="Marketing">Marketing</option>
+              <option value="AI & Tech">AI & Tech</option>
+              <option value="Tech & Business">Tech & Business</option>
+            </select>
           </div>
 
           <div className="flex flex-col">
@@ -149,48 +206,48 @@ export default function CreateEventModal({ show, onClose, onSubmit }) {
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-  <div className="flex flex-col">
-    <label className="text-sm font-semibold mb-1">Capacity</label>
-    <input
-      type="number"
-      name="capacity"
-      value={formData.capacity}
-      onChange={handleChange}
-      placeholder="Max attendees"
-      className="border border-gray-300 rounded-md py-2 px-3"
-    />
-  </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold mb-1">Capacity</label>
+              <input
+                type="number"
+                name="capacity"
+                value={formData.capacity}
+                onChange={handleChange}
+                placeholder="Max attendees"
+                min="1"
+                className="border border-gray-300 rounded-md py-2 px-3"
+              />
+            </div>
 
-  <div className="flex flex-col">
-    <label className="text-sm font-semibold mb-1">Event Type</label>
-    <select
-      name="event_type"
-      value={formData.event_type}
-      onChange={handleChange}
-      className="border border-gray-300 rounded-md py-2 px-3"
-    >
-      <option value="">Select Type</option>
-      <option value="Online">Online</option>
-      <option value="In-Person">In-Person</option>
-      <option value="Hybrid">Hybrid</option>
-    </select>
-  </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold mb-1">Event Type</label>
+              <select
+                name="event_type"
+                value={formData.event_type}
+                onChange={handleChange}
+                className="border border-gray-300 rounded-md py-2 px-3"
+              >
+                <option value="">Select Type</option>
+                <option value="Online">Online</option>
+                <option value="In-Person">In-Person</option>
+                <option value="Hybrid">Hybrid</option>
+              </select>
+            </div>
 
-  <div className="flex flex-col">
-    <label className="text-sm font-semibold mb-1">Fee ($)</label>
-    <input
-      type="number"
-      name="registration_fee"
-      value={formData.registration_fee}
-      onChange={handleChange}
-      step="0.01"
-      min="0"
-      placeholder="0.00"
-      className="border border-gray-300 rounded-md py-2 px-3"
-    />
-  </div>
-</div>
-
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold mb-1">Fee ($)</label>
+              <input
+                type="number"
+                name="registration_fee"
+                value={formData.registration_fee}
+                onChange={handleChange}
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                className="border border-gray-300 rounded-md py-2 px-3"
+              />
+            </div>
+          </div>
 
           <div className="flex justify-end">
             <button

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft } from "lucide-react";
 import HeaderBar from "../HeaderBar";
 import SearchAndFilter from "../SearchAndFilter";
 import EventsTable from "../EventsTable";
 import GuestEventModal from "./GuestEventModal";
 import { useNavigate } from "react-router-dom";
+import { Calendar, Search } from "lucide-react";
 
 const eventsPerPage = 5;
 
@@ -17,12 +17,11 @@ const categoryColors = {
   "Tech & Business": "bg-teal-100 text-teal-800",
 };
 
-export default function EventsPage({ onBack }) {
+export default function GuestEventsPage() {
   const navigate = useNavigate();
 
   const [eventsData, setEventsData] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
-  const [registeredEvents, setRegisteredEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,7 +56,6 @@ export default function EventsPage({ onBack }) {
         }
 
         const data = await response.json();
-        console.log("Fetched Events:", data);
 
         const mappedEvents = data.map((event) => {
           const start = event.start;
@@ -77,7 +75,7 @@ export default function EventsPage({ onBack }) {
             time,
             sponsored: event.sponsor_name ? "Yes" : "No",
             sponsor: event.sponsor_name || "N/A",
-            capacity: event.capacity || "N/A", // Ensure this is included
+            capacity: event.capacity || "N/A",
             registrations: event.registrations || 0,
             location: event.location,
             description: event.description,
@@ -98,15 +96,15 @@ export default function EventsPage({ onBack }) {
     };
 
     fetchEvents();
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
     let filtered = eventsData.filter(
       (event) =>
         event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.organizer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.organization_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         event.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.sponsor_name.toLowerCase().includes(searchQuery.toLowerCase())
+        (event.sponsor && event.sponsor.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
     if (selectedCategory) {
@@ -129,35 +127,11 @@ export default function EventsPage({ onBack }) {
     eventsData,
     selectedCategory,
     selectedDate,
-    selectedTime,
-    registeredEvents,
+    selectedTime
   ]);
 
-  const handleEventClick = async (event) => {
-        setSelectedEvent({
-            ...event,
-            onRegister: () => {
-                alert("Login to register for events");
-                navigate("/login");
-            }
-        });
-    };
-
-  const updateEvents = (eventId, isRegistered) => {
-    if (isRegistered) {
-      const updatedRegisteredEvents = [
-        ...registeredEvents,
-        eventsData.find((event) => event.id === eventId),
-      ];
-      setRegisteredEvents(updatedRegisteredEvents);
-    } else {
-      const updatedRegisteredEvents = registeredEvents.filter(
-        (event) => event.id !== eventId
-      );
-      setRegisteredEvents(updatedRegisteredEvents);
-    }
-
-    setFilteredEvents(registeredEvents);
+  const handleEventClick = (event) => {
+    setSelectedEvent(event);
   };
 
   const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
@@ -168,74 +142,140 @@ export default function EventsPage({ onBack }) {
   );
 
   return (
-    <div className="min-h-screen bg-white flex flex-col relative">
-        {/* HEADER BAR */}
-        <HeaderBar
-          menuOptions={[
-            { label: "EVENTS", onClick: () => navigate("/guest-events") },
-            { label: "LOGIN",onClick: () => navigate("/login")}
-          ]}
+    <div className="min-h-screen bg-gray-50 flex flex-col relative">
+      {/* HEADER BAR */}
+      <HeaderBar
+        menuOptions={[
+          { label: "EVENTS", onClick: () => navigate("/guest-events") },
+          { label: "LOGIN", onClick: () => navigate("/login")}
+        ]}
       />
 
-      <div className="px-10 py-6">
-        <div className="flex items-center space-x-4 mb-6">
-          <button 
-            onClick={() => navigate("/guest-dashboard")} 
-            className="p-2">
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-2xl font-bold uppercase">Events</h1>
-        </div>
-
-        <div className="flex justify-between items-center mb-4">
-
-          <div className="ml-auto">
-          <SearchAndFilter
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            selectedTime={selectedTime}
-            setSelectedTime={setSelectedTime}
-            resetFilters={resetFilters}
-          />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        {/* Hero section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Upcoming Events</h1>
+              <p className="text-gray-600 mt-2">Discover and explore events happening around you</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-0">
+              <button 
+                onClick={() => navigate("/login")}
+                className="bg-black hover:bg-gray-800 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+              >
+                Sign in to register
+              </button>
+            </div>
           </div>
         </div>
 
-        {loading && <p>Loading events...</p>}
-        {error && <p className="text-red-500">{error}</p>}
+        {/* Main content */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4 sm:mb-0 flex items-center">
+              <Calendar className="w-5 h-5 mr-2 text-gray-600" />
+              All Events
+            </h2>
+            
+            <div className="w-full sm:w-auto">
+              <SearchAndFilter
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
+                selectedTime={selectedTime}
+                setSelectedTime={setSelectedTime}
+                resetFilters={resetFilters}
+              />
+            </div>
+          </div>
 
-        {!loading && !error && (
-          <EventsTable
-            events={displayedEvents}
-            columns={[
-              { label: "Event", accessor: "title", width: "w-1/2" },
-              { label: "Organizer", accessor: "organization_name", width: "w-1/5" },
-              {
-                label: "Category",
-                accessor: "category",
-                width: "w-1/5",
-                render: (value, event) => (
-                  <span className={`px-2 py-1 rounded-lg text-xs ${event.categoryColor}`}>
-                    {value}
-                  </span>
-                ),
-              },
-              { label: "Fee", accessor: "feeFormatted", width: "w-1/6"},
-              { label: "Date", accessor: "date", width: "w-1/5" },
-              { label: "Time", accessor: "time", width: "w-1/5" },
-              { label: "Sponsored", accessor: "sponsored", width: "w-1/5" },
-              { label: "Sponsor", accessor: "sponsor", width: "w-1/5" },
-              
-            ]}
-            onEventClick={handleEventClick}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            totalPages={totalPages}
-          />
-        )}
+          {loading && (
+            <div className="flex justify-center items-center py-16">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            </div>
+          )}
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg text-center my-4">
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && filteredEvents.length === 0 && (
+            <div className="text-center py-10">
+              <Search className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-700">No events found</h3>
+              <p className="text-gray-500 mt-1">Try adjusting your search or filters</p>
+              <button 
+                onClick={resetFilters}
+                className="mt-4 text-blue-600 hover:text-blue-800"
+              >
+                Reset all filters
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && filteredEvents.length > 0 && (
+            <EventsTable
+              events={displayedEvents}
+              columns={[
+                { label: "Event", accessor: "title", width: "w-1/4" },
+                { label: "Organizer", accessor: "organization_name", width: "w-1/6" },
+                {
+                  label: "Category",
+                  accessor: "category",
+                  width: "w-1/8",
+                  render: (value, event) => (
+                    <span className={`px-2 py-1 rounded-lg text-xs ${event.categoryColor}`}>
+                      {value}
+                    </span>
+                  ),
+                },
+                { 
+                  label: "Fee", 
+                  accessor: "feeFormatted", 
+                  width: "w-1/10",
+                  render: (value) => (
+                    <span className={value === 'Free' ? 'text-green-600 font-medium' : ''}>
+                      {value}
+                    </span>
+                  )
+                },
+                { label: "Date", accessor: "date", width: "w-1/8" },
+                { label: "Time", accessor: "time", width: "w-1/8" },
+                { 
+                  label: "Spots Left", 
+                  accessor: "registrations", 
+                  width: "w-1/10", 
+                  render: (value, event) => {
+                    const spotsLeft = event.capacity - value;
+                    let colorClass = '';
+                    
+                    if (spotsLeft <= 5 && spotsLeft > 0) {
+                      colorClass = 'text-orange-600 font-medium';
+                    } else if (spotsLeft === 0) {
+                      colorClass = 'text-red-600 font-medium';
+                    }
+                    
+                    return (
+                      <span className={colorClass}>
+                        {spotsLeft === 0 ? 'Sold out' : spotsLeft}
+                      </span>
+                    );
+                  }
+                },
+              ]}
+              onEventClick={handleEventClick}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              totalPages={totalPages}
+            />
+          )}
+        </div>
       </div>
 
       {selectedEvent && (
@@ -245,8 +285,11 @@ export default function EventsPage({ onBack }) {
         />
       )}
 
-      <footer className="text-sm text-gray-600 p-4 pl-6 absolute bottom-0 left-0">
-        LOGGED IN AS: GUEST
+      <footer className="text-sm text-gray-600 p-4 pl-6 bg-white border-t">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
+          <span>LOGGED IN AS: GUEST</span>
+          <span className="text-xs">© 2025 SEES Event System</span>
+        </div>
       </footer>
     </div>
   );

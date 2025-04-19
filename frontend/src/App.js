@@ -14,8 +14,7 @@ import MyEvents from "./organizer/MyEvents";
 import AnalyticsPage from "./organizer/AnalyticsPage";
 import UserManagement from "./admin/UserManagement";
 import AdminEventsPage from "./admin/AdminEventsPage";
-import AccountsTable from "./admin/AccountsTable"; //Import accountsTable component
-import GuestDashboard from "./guest/GuestDashboard";
+import AccountsTable from "./admin/AccountsTable";
 import GuestEventsPage from "./guest/GuestEventsPage"; 
 import Calendar from "./Calendar";
 
@@ -30,13 +29,25 @@ export default function App() {
     <div className="h-screen flex flex-col overflow-hidden">
       <div className="flex-1 overflow-auto">
         <Routes>
-          <Route path="/" element={isAuthenticated ? (userType === "admin" ? <Navigate to="/admin-dashboard" /> : userType === "stakeholder" ? <Navigate to="/stakeholder-dashboard" /> : <Navigate to="/dashboard" />) : <Navigate to="/login" />} />
+          {/* Redirect root to appropriate pages */}
+          <Route path="/" element={
+            isAuthenticated 
+              ? (userType === "admin" 
+                  ? <Navigate to="/admin-dashboard" /> 
+                  : userType === "stakeholder" 
+                    ? <Navigate to="/stakeholder-dashboard" /> 
+                    : <Navigate to="/dashboard" />)
+              : <Navigate to="/guest-events" />} 
+          />
+          
+          {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/guest-dashboard" element={<GuestDashboard/>} /> {/* Guest dashboard route */}
-          <Route path="/guest-events" element={<GuestEventsPage/>} /> {/* Guest events page route */}
+          
+          {/* Guest route - only events page */}
+          <Route path="/guest-events" element={<GuestEventsPage/>} />
 
-          {/* ✅ Authenticated routes */}
+          {/* Authenticated routes */}
           <Route path="/dashboard" element={isAuthenticated ? (userType === "attendee" ? <AttendeeDashBoard /> : <OrganizerDashBoard />) : <Navigate to="/login" />} />
           <Route path="/stakeholder-dashboard" element={isAuthenticated && userType === "stakeholder" ? <StakeholderDashboard /> : <Navigate to="/login" />} />
           <Route path="/admin-dashboard" element={isAuthenticated && userType === "admin" ? <AdminDashboard /> : <Navigate to="/login" />} />
@@ -51,7 +62,9 @@ export default function App() {
           <Route path="/sponsor-event" element={isAuthenticated && userType === "stakeholder" ? <SponsorEvent onBack={handleBack}/> : <Navigate to="/login" />} />
           <Route path="/sponsorship-requests" element={isAuthenticated && userType === "stakeholder" ? <SponsorshipRequests onBack={handleBack}/> : <Navigate to="/login" />} />
           <Route path="/analytics" element={isAuthenticated && (userType === "organizer" || userType === "stakeholder") ? <AnalyticsPage /> : <Navigate to="/login" />} />
-          <Route path="*" element={<Navigate to="/" />} />
+          
+          {/* Redirect any other path to appropriate page */}
+          <Route path="*" element={isAuthenticated ? <Navigate to="/" /> : <Navigate to="/guest-events" />} />
         </Routes>
       </div>
     </div>
