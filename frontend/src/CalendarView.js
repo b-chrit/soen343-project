@@ -23,8 +23,8 @@ export default function CalendarView({ onBack }) {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [registeredEvents, setRegisteredEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [month, setMonth] = useState(2); // March
-  const [year, setYear] = useState(2025);
+  const [month, setMonth] = useState(new Date().getMonth());
+  const [year, setYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
