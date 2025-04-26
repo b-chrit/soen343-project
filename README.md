@@ -1,5 +1,9 @@
 # Smart Education Events System (SEES)
 
+
+https://github.com/user-attachments/assets/c6bf364a-ca8f-43dd-8f75-7628124a7048
+
+
 **SOEN 343 Project - Smart Education Events System (SEES)**  
 **Professor:** Dr. Joumana Dargham  
 **Course:** SOEN 343 - Software Architecture and Design  
